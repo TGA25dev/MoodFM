@@ -1,0 +1,5 @@
+flask
+text2emotion
+requests
+python-dotenv
+huggingface_hub

@@ -3,6 +3,7 @@ import requests
 from dotenv import load_dotenv
 import os
 import random
+from modules.spotify.spotify_data import search_track
 
 # Load environment variables from .env file
 load_dotenv()
@@ -45,11 +46,25 @@ def get_top_track_for_mood(mood_tag: str) -> dict:
     
     top_track = tracks[random.randint(0, len(tracks) - 1)]  #Randomly select a track from the list
 
+    top_track_name = top_track['name']
+    top_track_artist = top_track['artist']['name']
+    top_track_url = top_track['url']
+
     return {
-        'track': top_track['name'],
-        'artist': top_track['artist']['name'],
-        'url': top_track['url']
+        'track': top_track_name,
+        'artist': top_track_artist,
+        'url': top_track_url
     }
+
+def get_spotif_link(track_name:str, artist_name:str) -> str:
+    """
+    Get Spotify link for a given track and artist.
+    """
+    search_track_result = search_track(artist_name, track_name) #Get track data from Spotify
+    if search_track_result:
+        return search_track_result['url']
+    else:
+        return None
 
 if __name__ == "__main__":
     text = str(input("How do you feel today? "))
@@ -60,8 +75,10 @@ if __name__ == "__main__":
     print(f"Dominant Mood: {dominant_mood}")
 
     top_track = get_top_track_for_mood(dominant_mood)
+    link = get_spotif_link(top_track['track'], top_track['artist']) if top_track else None
+
     if top_track:
         print(f"Top Track for {dominant_mood}: {top_track['track']} by {top_track['artist']}")
-        print(f"Listen here: {top_track['url']}")
+        print(f"Listen here: {link if link else 'No Spotify link available'}")
     else:
         print(f"No top track found for mood: {dominant_mood}")
