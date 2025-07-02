@@ -1,5 +1,13 @@
 flask
-text2emotion
-requests
+flask-cors
+flask-limiter
+flask-talisman
+flask-session
+redis
+bleach
 python-dotenv
+requests
 huggingface_hub
+text2emotion
+sentry-sdk
+werkzeug
