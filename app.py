@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import logging
 from datetime import timedelta
 import redis
@@ -10,6 +10,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_session import Session
 from redis import Redis
 import bleach
+from datetime import datetime
 
 from modules.mood.mood_engine import get_mood
 from modules.music.spotify_data import search_track
@@ -116,6 +117,15 @@ def page_not_found(error):
     logger.warning(f"Page not found: {error}")
     return jsonify({'error': 'Page not found'}), 404
 
+#Basic Root
+@app.route('/', methods=['GET'])
+def index():
+    """
+    Serve html page
+    """
+    cache_buster = datetime.now().strftime("%Y%m%d%H%M%S")
+    return render_template('index.htm', cache_buster=cache_buster)
+
 # API Endpoints
 
 @app.route('/mood', methods=['POST'])
@@ -131,7 +141,7 @@ def mood_endpoint():
     
     text = data['text']
     # Sanitize input to prevent XSS attacks
-    text = bleach.clean(text, strip=True, tags=[], attributes={}, styles=[], protocols=[])
+    text = bleach.clean(text)
     if not text:
         return jsonify({"error": "Text cannot be empty"}), 400
     
@@ -161,8 +171,7 @@ def music_endpoint():
     mood_tag = data['mood']
 
     # Sanitize input to prevent XSS attacks
-    mood_tag = bleach.clean(mood_tag, strip=True, tags=[], attributes={}, styles=[],
-    protocols=[])
+    mood_tag = bleach.clean(mood_tag)
     if not mood_tag:
         return jsonify({"error": "Mood cannot be empty"}), 400
     
