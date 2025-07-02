@@ -61,7 +61,8 @@ Talisman(app,
     force_https=True,
     strict_transport_security=True,
     session_cookie_secure=True,
-    session_cookie_http_only=True
+    session_cookie_http_only=True,
+    content_security_policy=False
 )
 
 app.config['SESSION_TYPE'] = 'redis'
@@ -119,6 +120,7 @@ def page_not_found(error):
 
 #Basic Root
 @app.route('/', methods=['GET'])
+@limiter.limit("50 per minute")
 def index():
     """
     Serve html page

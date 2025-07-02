@@ -42,7 +42,8 @@ def search_track(track_name, artist_name):
                 "url": track["external_urls"]["spotify"],
                 "album": track["album"]["name"],
                 "release_date": track["album"]["release_date"],
-                "popularity": track["popularity"]
+                "popularity": track["popularity"],
+                "cover_image": track["album"]["images"][0]["url"] if track["album"]["images"] else None 
             }
     
     return None  # No track found
