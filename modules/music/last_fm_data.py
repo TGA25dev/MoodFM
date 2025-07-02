@@ -24,10 +24,13 @@ MOOD_TO_TAGS = {
     'relaxed': ['chill', 'ambient', 'folk', 'acoustic', 'relaxing']
 }
 
+# Add a global variable to track previously returned tracks
+PREVIOUS_TRACKS = set()
+
 def get_top_track_for_mood(mood_tag: str) -> dict:
-    tags = MOOD_TO_TAGS.get(mood_tag.lower(), ['pop'])  #Default to pop if mood not found
+    global PREVIOUS_TRACKS
+    tags = MOOD_TO_TAGS.get(mood_tag.lower(), ['pop'])  # Default to pop if mood not found
     
-    # Try multiple tags to get better results
     for tag in tags:
         url = 'http://ws.audioscrobbler.com/2.0/'
         params = {
@@ -46,9 +49,17 @@ def get_top_track_for_mood(mood_tag: str) -> dict:
         if not tracks:
             continue
         
-        # Get a track from the top 10 (more popular tracks)
-        top_tracks = tracks[:10]
-        selected_track = top_tracks[random.randint(0, len(top_tracks) - 1)]
+        # Shuffle the tracks
+        random.shuffle(tracks)
+        
+        # Filter out previously returned tracks
+        filtered_tracks = [track for track in tracks if track['name'] not in PREVIOUS_TRACKS]
+        if not filtered_tracks:
+            continue
+        
+        # Select the first track from the shuffled and filtered list
+        selected_track = filtered_tracks[0]
+        PREVIOUS_TRACKS.add(selected_track['name'])  # Add to the set of returned tracks
 
         return {
             'track': selected_track['name'],
@@ -56,5 +67,4 @@ def get_top_track_for_mood(mood_tag: str) -> dict:
             'url': selected_track['url']
         }
     
-    #return None if no tracks found
-    return None
+    return None  # Return None if no tracks found
