@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MoodFM - Your feelings, your music</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}?{{ cache_buster }}">
+    </head>
+    <body>
+        <div id="header">
+            <h1>MoodFM</h1>
+            <p>Your feelings, your music</p>
+        </div>
+
+        <div id="submit-container">
+
+            <input id="mood_input_box" type="text" placeholder="How are you feeling today ?">
+            <button id="submit_mood_button">Submit</button>
+
+        </div>
+
+        <div id="results-container" class="results-container">
+            <h2>Top Track for Your Mood</h2>
+            <div id="top-track-info">
+                <p id="top-track-title">Track Title</p>
+                <p id="top-track-artist">Artist Name</p>
+                <a id="top-track-link" href="#" target="_blank">Listen on Spotify</a>
+                <img id="top-track-image" src="" alt="Album Cover">
+            </div>
+        </div>
+
+    </body>
+    <script src="{{ url_for('static', filename='index.js') }}?{{ cache_buster }}"></script>
+</html>
