@@ -148,11 +148,17 @@ def mood_endpoint():
         return jsonify({"error": "Text cannot be empty"}), 400
     
     mood_analysis = get_mood(text)
-    if not mood_analysis:
-        return jsonify({"error": "Mood analysis failed"}), 500
+    if not mood_analysis or mood_analysis[0] is None:
+        return jsonify({
+            "error": "Mood analysis service is temporarily unavailable. Please try again later.",
+            "service_status": "degraded"
+        }), 503  # Service Unavailable
     
     dominant_mood, mood_score = mood_analysis
     logger.info(f"Mood analysis for text: {text} - Dominant Mood: {dominant_mood}, Score: {mood_score}")
+
+    if dominant_mood is None or mood_score is None or dominant_mood == "neutral":
+        return jsonify({"error": "Mood analysis returned no dominant mood"}), 400
 
     return jsonify({
         "dominant_mood": dominant_mood,
