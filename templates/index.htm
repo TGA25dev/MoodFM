@@ -5,30 +5,58 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>MoodFM - Your feelings, your music</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}?{{ cache_buster }}">
+
     </head>
     <body>
-        <div id="header">
-            <h1>MoodFM</h1>
-            <p>Your feelings, your music</p>
+        <div>
+            <div id="header">
+                <h1 class="header-title">MoodFM</h1>
+                <p class="header-subtitle">Your feelings, your music</p>
+            </div>
+            <div id="navbar">
+                <ul class="nav-links">
+                    <li><a href="#how-it-works">How it works</a></li>
+                    <li><a href="#about">About</a></li>
+                </ul>
+            </div>
         </div>
+
 
         <div id="submit-container">
-
-            <input id="mood_input_box" type="text" placeholder="How are you feeling today ?">
-            <button id="submit_mood_button">Submit</button>
-
+            <div class="search-container">
+                <button class="submit-mood-button" id="submit_mood_button">Turn your mood into music </button>
+                <input class="mood-input-box" id="mood_input_box" type="text" placeholder="How are you feeling today?">
+            </div>
         </div>
 
+        <div class="results-overlay" id="results-overlay"></div>
         <div id="results-container" class="results-container">
-            <h2>Top Track for Your Mood</h2>
+            <button class="close-button" id="close-button">×</button>
+            <h2>Your Perfect Track</h2>
             <div id="top-track-info">
+                <img id="top-track-image" src="" alt="Album Cover">
                 <p id="top-track-title">Track Title</p>
                 <p id="top-track-artist">Artist Name</p>
                 <a id="top-track-link" href="#" target="_blank">Listen on Spotify</a>
-                <img id="top-track-image" src="" alt="Album Cover">
+            </div>
+            <div class="action-buttons">
+                <button class="find-another-button" id="find-another-button">Find Another Song</button>
+            </div>
+        </div>
+
+        <div class="sections-container">
+            <div id="about" class="section">
+                <h2>About MoodFM</h2>
+                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Illum suscipit itaque quo excepturi laudantium quod, perferendis odit nam consequuntur cumque molestiae est, amet pariatur cupiditate! Laudantium voluptates assumenda reprehenderit architecto!</p>
+            </div>
+
+            <div id="how-it-works" class="section">
+                <h2>How it Works</h2>
+                <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Deleniti, quidem incidunt impedit nihil quisquam quas, sapiente officiis rem sed expedita a ratione? Quod doloremque assumenda vitae perferendis modi illo maiores.</p>
             </div>
         </div>
 
     </body>
     <script src="{{ url_for('static', filename='index.js') }}?{{ cache_buster }}"></script>
+    
 </html>

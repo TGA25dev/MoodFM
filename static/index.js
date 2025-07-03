@@ -17,12 +17,15 @@ async function fetch_best_music(mood, setButtonState) {
 
     // Update the UI with the best music data
     const resultsContainer = document.querySelector('.results-container');
+    const resultsOverlay = document.getElementById('results-overlay');
     const topTrackTitle = document.getElementById('top-track-title');
     const topTrackArtist = document.getElementById('top-track-artist');
     const topTrackImage = document.getElementById('top-track-image');
     const topTrackLink = document.getElementById('top-track-link');
     
-    resultsContainer.style.display = 'block';
+    // Show popup with animation and overlay
+    resultsContainer.classList.add('show');
+    resultsOverlay.classList.add('show');
     
 
     topTrackTitle.textContent = data.spotify?.name || 'Unknown Title';
@@ -99,10 +102,81 @@ document.addEventListener('DOMContentLoaded', () => {
     const topTrackArtist = document.getElementById('top-track-artist');
     const topTrackImage = document.getElementById('top-track-image'); 
 
+    // Store the last processed mood for rerolling
+    let lastProcessedMood = null;
+
+    // Dynamic placeholder configuration
+    const placeholders = [
+        "Just got home, I failed my exam...",
+        "I'm going to a party tonight!",
+        "I'm so tired, I need to sleep..",
+        "That day was awful! I'm fed up with everything !",
+        "Its summer, its hot, what an amazing day to go out !!",
+        "I just crashed my car, I feel so bad...",
+        "That day was amazing! I feel so happy!",
+        "I got the job! Didn't think I would!"
+    ];
+
+    let currentPlaceholderIndex = 0;
+    let currentText = '';
+    let isTyping = true;
+    let charIndex = 0;
+
+    function typeEffect() {
+        const currentPlaceholder = placeholders[currentPlaceholderIndex];
+        
+        if (isTyping) {
+            // Typing phase
+            if (charIndex < currentPlaceholder.length) {
+                currentText += currentPlaceholder.charAt(charIndex);
+                moodInputBox.placeholder = currentText;
+                charIndex++;
+                setTimeout(typeEffect, 50 + Math.random() * 50); //typing speed
+            } else {
+                // Wait phase
+                isTyping = false;
+                setTimeout(typeEffect, 1500); //Wait 2 seconds before deleting
+            }
+        } else {
+            // Deleting phase
+            if (currentText.length > 0) {
+                currentText = currentText.slice(0, -1);
+                moodInputBox.placeholder = currentText;
+                setTimeout(typeEffect, 50 + Math.random() * 50); // deletion spee
+            } else {
+
+                isTyping = true;
+                charIndex = 0;
+                currentPlaceholderIndex = (currentPlaceholderIndex + 1) % placeholders.length;
+                setTimeout(typeEffect, 500);
+            }
+        }
+    }
+
+    // Start the typing effect
+    typeEffect();
+
+    // Pause typing animation when user focuses on input
+    moodInputBox.addEventListener('focus', () => {
+    });
+
+    //Resume typing animation when user leaves inpu
+    moodInputBox.addEventListener('blur', () => {
+        if (moodInputBox.value.trim() === '') {
+            setTimeout(typeEffect, 1000);
+        }
+    });
+
     // Disable button during submission
     function setButtonState(disabled) {
         submitMoodButton.disabled = disabled;
-        submitMoodButton.textContent = disabled ? 'Processing...' : 'Submit';
+        submitMoodButton.textContent = disabled ? 'Analysing your feelings...' : 'Turn your mood into music ';
+    }
+
+    function setFindAnotherButtonState(disabled) {
+        const findAnotherButton = document.getElementById('find-another-button');
+        findAnotherButton.disabled = disabled;
+        findAnotherButton.textContent = disabled ? 'Finding another song...' : 'Find Another Song';
     }
 
     submitMoodButton.addEventListener('click', async () => {
@@ -112,7 +186,12 @@ document.addEventListener('DOMContentLoaded', () => {
             validateMoodInput(moodInput);
             setButtonState(true);
             
-            await submitMood(moodInput, setButtonState);
+            const result = await submitMood(moodInput, setButtonState);
+            
+            // Store the dominant mood for rerolling
+            if (result && result.dominant_mood) {
+                lastProcessedMood = result.dominant_mood;
+            }
             
             //Clear input after successful submission
             moodInputBox.value = '';
@@ -123,10 +202,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    //Sumit on enter key
+    //Submit on enter key
     moodInputBox.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             submitMoodButton.click();
         }
+    });
+
+    document.getElementById('find-another-button').addEventListener('click', async function() {
+        if (!lastProcessedMood) {
+            console.warn('No previous mood to reroll');
+            return;
+        }
+
+        try {
+            setFindAnotherButtonState(true);
+            
+            // Fetch another song with the same mood
+            await fetch_best_music(lastProcessedMood, () => setFindAnotherButtonState(false));
+            
+        } catch (error) {
+            console.error('Error finding another song:', error);
+            alert('Failed to find another song. Please try again later.');
+            setFindAnotherButtonState(false);
+        }
+    });
+
+    document.getElementById('close-button').addEventListener('click', function() {
+        const resultsContainer = document.getElementById('results-container');
+        const resultsOverlay = document.getElementById('results-overlay');
+        
+        // Remove the show class to hide the popup
+        resultsContainer.classList.remove('show');
+        resultsOverlay.classList.remove('show');
+    });
+
+    document.getElementById('results-overlay').addEventListener('click', function() {
+        const resultsContainer = document.getElementById('results-container');
+        const resultsOverlay = document.getElementById('results-overlay');
+        
+        resultsContainer.classList.remove('show');
+        resultsOverlay.classList.remove('show');
     });
 });
