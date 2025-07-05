@@ -6,6 +6,7 @@
         <title>MoodFM - Your feelings, your music</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?{{ cache_buster }}">
         <script src="https://unpkg.com/scrollreveal@4.0.0/dist/scrollreveal.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     </head>
     <body>
@@ -40,7 +41,20 @@
                 <img id="top-track-image" src="" alt="Album Cover">
                 <p id="top-track-title">Track Title</p>
                 <p id="top-track-artist">Artist Name</p>
-                <a id="top-track-link" href="#" target="_blank">Listen on Spotify</a>
+                <div id="streaming-links">
+                    <a id="spotify-link" class="streaming-button spotify" href="#" target="_blank">
+                        <span class="icon"><i class="fab fa-spotify"></i></span> Spotify
+                    </a>
+                    <a id="apple-music-link" class="streaming-button apple-music" href="#" target="_blank">
+                        <span class="icon"><i class="fab fa-apple"></i></span> Apple Music
+                    </a>
+                    <a id="deezer-link" class="streaming-button deezer" href="#" target="_blank">
+                        <span class="icon"><i class="fab fa-deezer"></i></span> Deezer
+                    </a>
+                    <a id="youtube-link" class="streaming-button youtube" href="#" target="_blank">
+                        <span class="icon"><i class="fab fa-youtube"></i></span> YouTube Music
+                    </a>
+                </div>
             </div>
             <div class="action-buttons">
                 <button class="find-another-button" id="find-another-button">Find Another Song</button>

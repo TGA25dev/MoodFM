@@ -126,7 +126,7 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
     border: 1px solid #4a4a6e;
     width: 90%;
-    max-width: 500px;
+    max-width: 700px;
     z-index: 1001;
     backdrop-filter: blur(10px);
 }
@@ -415,6 +415,72 @@ body.popup-open {
   border-color: #5a5a7e;
   transform: translateX(-50%) translateY(-5px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+#streaming-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.streaming-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    gap: 8px;
+}
+
+.streaming-button .icon {
+    font-size: 1.2rem;
+}
+
+.streaming-button.spotify {
+    background: #1DB954;
+    color: white;
+}
+
+.streaming-button.spotify:hover {
+    background: #1ed760;
+    box-shadow: 0 4px 12px rgba(29, 185, 84, 0.3);
+}
+
+.streaming-button.youtube {
+    background: #FF0000;
+    color: white;
+}
+
+.streaming-button.youtube:hover {
+    background: #ff3333;
+    box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+}
+
+.streaming-button.apple-music {
+  background: #fc3c44;
+  color: white;
+}
+
+.streaming-button.apple-music:hover {
+  background: #f94c57;
+  color: white;
+  box-shadow: 0 4px 12px rgba(252, 60, 68, 0.3);
+}
+
+.streaming-button.deezer {
+    background: #a238ff;
+    color: white;
+}
+
+.streaming-button.deezer:hover {
+    background: #b55fff;
+    box-shadow: 0 4px 12px rgba(162, 56, 255, 0.3);
 }
 
 

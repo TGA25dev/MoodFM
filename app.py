@@ -13,8 +13,12 @@ import bleach
 from datetime import datetime
 
 from modules.mood.mood_engine import get_mood
-from modules.music.spotify_data import search_track
 from modules.music.last_fm_data import get_top_track_for_mood
+
+from modules.music.spotify_data import search_track_on_spotify
+from modules.music.ytb_music_data import search_track_on_ytb
+from modules.music.deezer_data import search_track_on_deezer
+from modules.music.apple_music_data import search_track_on_apple_music
 
 from modules.ratelimit.ratelimiter import limiter
 
@@ -147,6 +151,13 @@ def mood_endpoint():
     if not text:
         return jsonify({"error": "Text cannot be empty"}), 400
     
+    if text == "rickroll":
+        logger.info("Rickroll detected, redirecting to YouTube")
+        return jsonify({
+            "rickroll": "You've been Rickrolled !",
+            "rickroll_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        }), 200
+    
     mood_analysis = get_mood(text)
     if not mood_analysis or mood_analysis[0] is None:
         return jsonify({
@@ -190,19 +201,36 @@ def music_endpoint():
     
     logger.info(f"Top track for mood '{mood_tag}': {top_track['track']} by {top_track['artist']}")
     
-    spotify_result = search_track(top_track['track'], top_track['artist'])
-    
-    if not spotify_result:
-        logger.warning(f"Track '{top_track['track']}' by {top_track['artist']} not found on Spotify")
+    # Different music providers and their search functions
+    providers = {
+        "spotify": lambda: search_track_on_spotify(top_track['track'], top_track['artist']),
+        "deezer": lambda: search_track_on_deezer(top_track['artist'], top_track['track']),
+        "ytb_music": lambda: search_track_on_ytb(top_track['artist'], top_track['track']),
+        "apple_music": lambda: search_track_on_apple_music(top_track['artist'], top_track['track'])
+    }
+
+    results = {}
+    found_any = False
+
+    for provider, search_fn in providers.items():
+        try:
+            result = search_fn()
+            if result:
+                results[provider] = result
+                found_any = True
+            else:
+                logger.warning(f"Track '{top_track['track']}' by {top_track['artist']} not found on {provider.capitalize()}")
+        except Exception as e:
+            logger.error(f"Error searching {provider}: {e}")
+
+    if not found_any:
         return jsonify({
-            "message": "Track not found on Spotify",
+            "message": "Track not found on any provider",
             "last_fm_url": top_track['url']
         }), 404
-    
-    return jsonify({
-        "spotify": spotify_result,
-        "last_fm_url": top_track['url']
-    }), 200
+
+    results["last_fm_url"] = top_track['url']
+    return jsonify(results), 200
 
 @app.route('/ping', methods=['GET'])
 @limiter.limit(os.getenv("PING_ENDPOINT_LIMIT", "10") + " per minute")

@@ -1,7 +1,7 @@
 import requests
 from modules.music.spotify_token import get_spotify_token
 
-def search_track(track_name, artist_name):
+def search_track_on_spotify(track_name, artist_name):
     token = get_spotify_token()
     if not token:
         raise Exception("Failed to retrieve Spotify token")

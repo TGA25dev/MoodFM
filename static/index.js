@@ -21,17 +21,20 @@ async function fetch_best_music(mood, setButtonState) {
     const topTrackTitle = document.getElementById('top-track-title');
     const topTrackArtist = document.getElementById('top-track-artist');
     const topTrackImage = document.getElementById('top-track-image');
-    const topTrackLink = document.getElementById('top-track-link');
+    
+    // Get streaming link elements
+    const spotifyLink = document.getElementById('spotify-link');
+    const youtubeLink = document.getElementById('youtube-link');
+    const deezerLink = document.getElementById('deezer-link');
+    const appleMusicLink = document.getElementById('apple-music-link');
     
     // Show popup with animation and overlay
     resultsContainer.classList.add('show');
     resultsOverlay.classList.add('show');
     
-
+    // Set track info
     topTrackTitle.textContent = data.spotify?.name || 'Unknown Title';
     topTrackArtist.textContent = data.spotify?.artist || 'Unknown Artist';
-    topTrackLink.href = data.spotify?.url || '#';
-    topTrackLink.textContent = 'Listen on Spotify';
     
     // Fix: Use cover_image instead of image
     if (data.spotify?.cover_image) {
@@ -42,6 +45,36 @@ async function fetch_best_music(mood, setButtonState) {
     }
     
     topTrackImage.alt = `${data.spotify?.name || 'Unknown'} by ${data.spotify?.artist || 'Unknown'}`;
+    
+    // Set streaming links
+    if (data.spotify?.url) {
+        spotifyLink.href = data.spotify.url;
+        spotifyLink.style.display = 'inline-flex';
+    } else {
+        spotifyLink.style.display = 'none';
+    }
+    
+    const trackName = data.spotify?.name || '';
+    const artistName = data.spotify?.artist || '';
+    const searchQuery = encodeURIComponent(`${trackName} ${artistName}`);
+    
+    if (data.ytb_music?.url) {
+        youtubeLink.href = data.ytb_music.url;
+    } else {
+        youtubeLink.href = `https://www.youtube.com/results?search_query=${searchQuery}`;
+    }
+    
+    if (data.deezer?.url) {
+        deezerLink.href = data.deezer.url;
+    } else {
+        deezerLink.href = `https://www.deezer.com/search/${searchQuery}`;
+    }
+
+    if (data.apple_music?.url) {
+        appleMusicLink.href = data.apple_music.url;
+    } else {
+        appleMusicLink.href = `https://music.apple.com/search?term=${searchQuery}`;
+    }
     
     if (setButtonState) {
         setButtonState(false); 
@@ -79,6 +112,10 @@ async function submitMood(moodInput, setButtonState) {
         
         if (data.dominant_mood) {
             await fetch_best_music(data.dominant_mood, setButtonState);
+
+        } else if (data.rickroll) {
+            open(data.rickroll_url, '_blank');
+
         } else {
             console.warn('No dominant mood returned from server');
         }
@@ -121,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentText = '';
     let isTyping = true;
     let charIndex = 0;
+    let typeEffectTimer = null;
 
     function typeEffect() {
         const currentPlaceholder = placeholders[currentPlaceholderIndex];
@@ -131,24 +169,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentText += currentPlaceholder.charAt(charIndex);
                 moodInputBox.placeholder = currentText;
                 charIndex++;
-                setTimeout(typeEffect, 50 + Math.random() * 50); //typing speed
+                typeEffectTimer = setTimeout(typeEffect, 50 + Math.random() * 50); //typing speed
             } else {
                 // Wait phase
                 isTyping = false;
-                setTimeout(typeEffect, 1500); //Wait 2 seconds before deleting
+                typeEffectTimer = setTimeout(typeEffect, 1500); //Wait before deleting
             }
         } else {
             // Deleting phase
             if (currentText.length > 0) {
                 currentText = currentText.slice(0, -1);
                 moodInputBox.placeholder = currentText;
-                setTimeout(typeEffect, 50 + Math.random() * 50); // deletion spee
+                typeEffectTimer = setTimeout(typeEffect, 50 + Math.random() * 50); // deletion speed
             } else {
-
                 isTyping = true;
                 charIndex = 0;
                 currentPlaceholderIndex = (currentPlaceholderIndex + 1) % placeholders.length;
-                setTimeout(typeEffect, 500);
+                typeEffectTimer = setTimeout(typeEffect, 500);
             }
         }
     }
@@ -158,12 +195,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Pause typing animation when user focuses on input
     moodInputBox.addEventListener('focus', () => {
+        clearTimeout(typeEffectTimer); // Clear the animation when focused
     });
 
-    //Resume typing animation when user leaves inpu
+    //Resume typing animation when user leaves input
     moodInputBox.addEventListener('blur', () => {
         if (moodInputBox.value.trim() === '') {
-            setTimeout(typeEffect, 1000);
+            clearTimeout(typeEffectTimer); // Clear any existing animation
+            typeEffectTimer = setTimeout(typeEffect, 1000);
         }
     });
 
