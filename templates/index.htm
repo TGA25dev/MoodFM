@@ -4,7 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>MoodFM - Your feelings, your music</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}?{{ cache_buster }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?{{ cache_buster }}">
+        <script src="https://unpkg.com/scrollreveal@4.0.0/dist/scrollreveal.min.js"></script>
 
     </head>
     <body>
@@ -17,6 +18,7 @@
                 <ul class="nav-links">
                     <li><a href="#how-it-works">How it works</a></li>
                     <li><a href="#about">About</a></li>
+                    <li><a target="_blank" href="https://hackclub.com/">Hackclub</a></li>
                 </ul>
             </div>
         </div>
@@ -27,6 +29,7 @@
                 <button class="submit-mood-button" id="submit_mood_button">Turn your mood into music </button>
                 <input class="mood-input-box" id="mood_input_box" type="text" placeholder="How are you feeling today?">
             </div>
+            <p class="scroll-instructions">Don't forget to scroll down !</p>
         </div>
 
         <div class="results-overlay" id="results-overlay"></div>
@@ -47,7 +50,7 @@
         <div class="sections-container">
             <div id="about" class="section">
                 <h2>About MoodFM</h2>
-                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Illum suscipit itaque quo excepturi laudantium quod, perferendis odit nam consequuntur cumque molestiae est, amet pariatur cupiditate! Laudantium voluptates assumenda reprehenderit architecto!</p>
+                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Illum suscipit itaque quo excepturi laudantium quod, perferendis odit nam consequuntur cumque molestiae est, amet pariatur cupiditate! Laudantium voluptates assumenda reprehenderit architecto! Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, inventore, non blanditiis, nostrum laborum provident minima veritatis beatae aut corrupti sapiente eum iusto a quis? Quas recusandae eveniet qui vel?</p>
             </div>
 
             <div id="how-it-works" class="section">
@@ -56,6 +59,7 @@
             </div>
         </div>
 
+        <a href="#top" class="go-up-link" id="go-up-link">Go up ↑</a>
     </body>
     <script src="{{ url_for('static', filename='index.js') }}?{{ cache_buster }}"></script>
     

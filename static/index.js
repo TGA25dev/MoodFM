@@ -244,4 +244,53 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.classList.remove('show');
         resultsOverlay.classList.remove('show');
     });
+
+    // Hide search box on scroll
+    const submitContainer = document.getElementById('submit-container');
+    let lastScrollPosition = 0;
+    let scrollThreshold = 100;
+    
+    window.addEventListener('scroll', () => {
+        const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+        const goUpLink = document.getElementById('go-up-link');
+        
+        // Check if scrolled down more than threshold
+        if (currentScrollPosition > scrollThreshold) {
+            submitContainer.classList.add('hidden');
+            goUpLink.classList.add('show'); // Show the go-up button
+        } else {
+            submitContainer.classList.remove('hidden');
+            goUpLink.classList.remove('show'); //Hide the go-up button
+        }
+        
+        lastScrollPosition = currentScrollPosition;
+    });
+    
+    // Initialize ScrollReveal for sections
+    const sr = ScrollReveal({
+        origin: 'bottom',
+        distance: '30px',
+        duration: 1000,
+        delay: 100,
+        easing: 'ease-out',
+        reset: false,
+        viewFactor: 0.2,        // Start animation when element is 20% in view
+        cleanup: false 
+    });
+    
+    //Animations on scrll
+    sr.reveal('#about', {
+        delay: 400,
+        origin: 'bottom'
+    });
+    
+    sr.reveal('#how-it-works', { 
+        delay: 500,
+        origin: 'bottom'
+    });
+
+    sr.reveal('#go-up-link', { 
+        delay: 600,
+        origin: 'bottom'
+    });
 });
