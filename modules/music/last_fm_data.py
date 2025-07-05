@@ -11,18 +11,14 @@ last_fm_api_key = os.getenv('LAST_FM_API_KEY')
 
 # Map emotions to better music tags/genres
 MOOD_TO_TAGS = {
-    'joy': ['happy', 'upbeat', 'pop', 'dance', 'feel good'],
-    'happiness': ['happy', 'upbeat', 'pop', 'dance', 'feel good'],
-    'sadness': ['sad', 'melancholy', 'indie', 'alternative', 'emotional'],
-    'anger': ['rock', 'metal', 'punk', 'aggressive', 'hard rock'],
-    'fear': ['dark', 'ambient', 'electronic', 'atmospheric'],
-    'surprise': ['experimental', 'indie', 'alternative', 'eclectic'],
-    'disgust': ['grunge', 'alternative', 'punk', 'industrial'],
-    'love': ['romantic', 'love songs', 'r&b', 'soul', 'ballad'],
-    'excited': ['energetic', 'electronic', 'dance', 'pop', 'upbeat'],
-    'calm': ['chill', 'ambient', 'folk', 'acoustic', 'relaxing'],
-    'relaxed': ['chill', 'ambient', 'folk', 'acoustic', 'relaxing']
+    'joy': ['happy', 'upbeat', 'pop', 'dance', 'feel good', 'electropop'],
+    'sadness': ['melancholy', 'indie', 'alternative', 'emotional', 'acoustic'],
+    'anger': ['aggressive', 'hard rock', 'metal', 'punk', 'industrial'],
+    'fear': ['dark ambient', 'electronic', 'atmospheric', 'cinematic'],
+    'disgust': ['grunge', 'noise rock', 'industrial', 'raw', 'alt punk'],
+    'surprise': ['experimental', 'eclectic', 'electronic', 'funk', 'alt pop'],
 }
+
 
 # Track of previously returned tracks
 PREVIOUS_TRACKS = set()
@@ -31,7 +27,7 @@ def get_top_track_for_mood(mood_tag: str) -> dict:
     global PREVIOUS_TRACKS
     
     # Get tags for the mood
-    tags = MOOD_TO_TAGS.get(mood_tag.lower(), ['pop'])
+    tags = MOOD_TO_TAGS.get(mood_tag.lower())
     
     for tag in tags:
         url = 'http://ws.audioscrobbler.com/2.0/'
@@ -40,7 +36,7 @@ def get_top_track_for_mood(mood_tag: str) -> dict:
             'tag': tag,
             'api_key': last_fm_api_key,
             'format': 'json',
-            'limit': 50
+            'limit': 100
         }
         response = requests.get(url, params=params)
         if response.status_code != 200:
