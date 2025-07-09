@@ -483,6 +483,145 @@ body.popup-open {
     box-shadow: 0 4px 12px rgba(162, 56, 255, 0.3);
 }
 
+/* Mobile responsive layout */
+@media (max-width: 768px) {
+
+  #header {
+    margin-top: 0.5rem;
+  }
+
+  .sections-container {
+    flex-direction: column;
+    gap: 30px;
+    width: 100%;
+    margin: 0 0 1.5rem;
+    padding: 0 1rem;
+    box-sizing: border-box;
+  }
+  
+  .section {
+    width: 100%;
+    max-width: 100%;
+    padding: 20px 15px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    margin-left: 0;
+    margin-right: 0;
+    box-sizing: border-box;
+  }
+  
+  .section h2 {
+    font-size: 1.6rem;
+    margin-bottom: 15px;
+  }
+  
+  .section p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  
+  #header {
+    top: 10px;
+    left: 10px;
+  }
+  
+  .header-title {
+    font-size: 3.5rem;
+  }
+  
+  .header-subtitle {
+    font-size: 1rem;
+  }
+  
+  #navbar {
+    display: none;
+  }
+
+  #submit-container {
+    padding: 0 1rem;
+    box-sizing: border-box;
+  }
+  
+  .search-container {
+    height: 56px;
+    border-radius: 18px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .submit-mood-button {
+    height: 56px;
+    font-size: 14px;
+    padding: 0 12px;
+    min-width: 100px;
+    width: auto;
+    white-space: nowrap;
+    border-radius: 18px 0 0 18px;
+  }
+  
+  .mood-input-box {
+    font-size: 14px;
+    padding: 0 10px;
+    width: 100%;
+    min-width: 0;
+  }
+  
+  #streaming-links {
+    gap: 8px;
+  }
+  
+  .streaming-button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .results-container {
+    padding: 30px 20px;
+    border-radius: 18px;
+    width: 90%;
+    box-sizing: border-box;
+  }
+  
+  .results-container h2 {
+    font-size: 1.6rem;
+    margin-bottom: 18px;
+  }
+  
+  #top-track-image {
+    width: 160px;
+    height: 160px;
+  }
+  
+  #top-track-title {
+    font-size: 1.3rem;
+  }
+  
+  #top-track-artist {
+    font-size: 1rem;
+  }
+
+  .go-up-link {
+    bottom: 20px;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-container {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .submit-mood-button {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}
+
 
 /* smooth scrolling for anchor links */
 html {
