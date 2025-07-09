@@ -36,7 +36,7 @@ def get_top_track_for_mood(mood_tag: str) -> dict:
             'tag': tag,
             'api_key': last_fm_api_key,
             'format': 'json',
-            'limit': 100
+            'limit': 85
         }
         response = requests.get(url, params=params)
         if response.status_code != 200:

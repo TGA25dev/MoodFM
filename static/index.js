@@ -1,83 +1,92 @@
 async function fetch_best_music(mood, setButtonState) {
-    console.log(`Fetching best music for mood: ${mood}`);
-    
-    const response = await fetch('/music', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ mood: mood })
-    });
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Server error: ${response.status}`);
-    }
-    const data = await response.json();
-    console.log('Best music data:', data);
+    try {
+        console.log(`Fetching best music for mood: ${mood}`);
+        
+        const response = await fetch('/music', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mood: mood })
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Server error: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Best music data:', data);
 
-    // Update the UI with the best music data
-    const resultsContainer = document.querySelector('.results-container');
-    const resultsOverlay = document.getElementById('results-overlay');
-    const topTrackTitle = document.getElementById('top-track-title');
-    const topTrackArtist = document.getElementById('top-track-artist');
-    const topTrackImage = document.getElementById('top-track-image');
-    
-    // Get streaming link elements
-    const spotifyLink = document.getElementById('spotify-link');
-    const youtubeLink = document.getElementById('youtube-link');
-    const deezerLink = document.getElementById('deezer-link');
-    const appleMusicLink = document.getElementById('apple-music-link');
-    
-    // Show popup with animation and overlay
-    resultsContainer.classList.add('show');
-    resultsOverlay.classList.add('show');
-    
-    // Set track info
-    topTrackTitle.textContent = data.spotify?.name || 'Unknown Title';
-    topTrackArtist.textContent = data.spotify?.artist || 'Unknown Artist';
-    
-    // Fix: Use cover_image instead of image
-    if (data.spotify?.cover_image) {
-        topTrackImage.src = data.spotify.cover_image;
-        topTrackImage.style.display = 'block';
-    } else {
-        topTrackImage.style.display = 'none'; // Hide image if not available
-    }
-    
-    topTrackImage.alt = `${data.spotify?.name || 'Unknown'} by ${data.spotify?.artist || 'Unknown'}`;
-    
-    // Set streaming links
-    if (data.spotify?.url) {
-        spotifyLink.href = data.spotify.url;
-        spotifyLink.style.display = 'inline-flex';
-    } else {
-        spotifyLink.style.display = 'none';
-    }
-    
-    const trackName = data.spotify?.name || '';
-    const artistName = data.spotify?.artist || '';
-    const searchQuery = encodeURIComponent(`${trackName} ${artistName}`);
-    
-    if (data.ytb_music?.url) {
-        youtubeLink.href = data.ytb_music.url;
-    } else {
-        youtubeLink.href = `https://www.youtube.com/results?search_query=${searchQuery}`;
-    }
-    
-    if (data.deezer?.url) {
-        deezerLink.href = data.deezer.url;
-    } else {
-        deezerLink.href = `https://www.deezer.com/search/${searchQuery}`;
-    }
+        // Update the UI with the best music data
+        const resultsContainer = document.querySelector('.results-container');
+        const resultsOverlay = document.getElementById('results-overlay');
+        const topTrackTitle = document.getElementById('top-track-title');
+        const topTrackArtist = document.getElementById('top-track-artist');
+        const topTrackImage = document.getElementById('top-track-image');
+        
+        // Get streaming link elements
+        const spotifyLink = document.getElementById('spotify-link');
+        const youtubeLink = document.getElementById('youtube-link');
+        const deezerLink = document.getElementById('deezer-link');
+        const appleMusicLink = document.getElementById('apple-music-link');
+        
+        // Show popup with animation and overlay
+        resultsContainer.classList.add('show');
+        resultsOverlay.classList.add('show');
+        
+        // Set track info
+        topTrackTitle.textContent = data.spotify?.name || 'Unknown Title';
+        topTrackArtist.textContent = data.spotify?.artist || 'Unknown Artist';
+        
+        if (data.spotify?.cover_image) {
+            topTrackImage.src = data.spotify.cover_image;
+            topTrackImage.style.display = 'block';
+        } else {
+            topTrackImage.style.display = 'none'; // Hide image if not available
+        }
+        
+        topTrackImage.alt = `${data.spotify?.name || 'Unknown'} by ${data.spotify?.artist || 'Unknown'}`;
+        
+        // Set streaming links
+        if (data.spotify?.url) {
+            spotifyLink.href = data.spotify.url;
+            spotifyLink.style.display = 'inline-flex';
+        } else {
+            spotifyLink.style.display = 'none';
+        }
+        
+        const trackName = data.spotify?.name || '';
+        const artistName = data.spotify?.artist || '';
+        const searchQuery = encodeURIComponent(`${trackName} ${artistName}`);
+        
+        if (data.ytb_music?.url) {
+            youtubeLink.href = data.ytb_music.url;
+        } else {
+            youtubeLink.href = `https://www.youtube.com/results?search_query=${searchQuery}`;
+        }
+        
+        if (data.deezer?.url) {
+            deezerLink.href = data.deezer.url;
+        } else {
+            deezerLink.href = `https://www.deezer.com/search/${searchQuery}`;
+        }
 
-    if (data.apple_music?.url) {
-        appleMusicLink.href = data.apple_music.url;
-    } else {
-        appleMusicLink.href = `https://music.apple.com/search?term=${searchQuery}`;
-    }
-    
-    if (setButtonState) {
-        setButtonState(false); 
+        if (data.apple_music?.url) {
+            appleMusicLink.href = data.apple_music.url;
+        } else {
+            appleMusicLink.href = `https://music.apple.com/search?term=${searchQuery}`;
+        }
+        
+        if (setButtonState) {
+            setButtonState(false); 
+        }
+        
+        hideLoading();
+    } catch (error) {
+        console.error('Error fetching music:', error);
+        hideLoading();
+        if (setButtonState) {
+            setButtonState(false);
+        }
     }
 }
 
@@ -111,10 +120,19 @@ async function submitMood(moodInput, setButtonState) {
         console.log('Server response:', data);
         
         if (data.dominant_mood) {
+            const conversationalMood = convertMoodToConversational(data.dominant_mood);
+            
+            // Update the mood confidence display
+            document.getElementById('mood-score').textContent = data.mood_score;
+            document.getElementById('mood-name').textContent = conversationalMood;
+            
             await fetch_best_music(data.dominant_mood, setButtonState);
 
         } else if (data.rickroll) {
             open(data.rickroll_url, '_blank');
+
+        } else if (data.skibidi_url) {
+            open(data.skibidi_url, '_blank');
 
         } else {
             console.warn('No dominant mood returned from server');
@@ -128,6 +146,19 @@ async function submitMood(moodInput, setButtonState) {
         // Reset button state after operation
         setButtonState(false);
     }
+}
+
+function convertMoodToConversational(mood) {
+    const moodMap = {
+        "anger": "angry",
+        "disgust": "disgusted",
+        "fear": "scared",
+        "joy": "happy",
+        "sadness": "sad",
+        "surprise": "surprised"
+    };
+    
+    return moodMap[mood.toLowerCase()] || mood;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -151,10 +182,15 @@ document.addEventListener('DOMContentLoaded', () => {
         "Its summer, its hot, what an amazing day to go out !!",
         "I just crashed my car, I feel so bad...",
         "That day was amazing! I feel so happy!",
-        "I got the job! Didn't think I would!"
+        "I got the job! Didn't think I would!",
+        "It's raining, so boring...",
+        "Hopped on the plane at LAX with a dream and my cardigan",
+        "I just got dumped, I feel so sad...",
+        "I just got a promotion, I'm so excited!",
+        "That day is amazing !"
     ];
 
-    let currentPlaceholderIndex = 0;
+    let currentPlaceholderIndex = Math.floor(Math.random() * placeholders.length);
     let currentText = '';
     let isTyping = true;
     let charIndex = 0;
@@ -184,7 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 isTyping = true;
                 charIndex = 0;
-                currentPlaceholderIndex = (currentPlaceholderIndex + 1) % placeholders.length;
+                
+                // Get random placeholder that's different from the current one
+                let newIndex;
+                do {
+                    newIndex = Math.floor(Math.random() * placeholders.length);
+                } while (newIndex === currentPlaceholderIndex && placeholders.length > 1);
+                
+                currentPlaceholderIndex = newIndex;
                 typeEffectTimer = setTimeout(typeEffect, 500);
             }
         }
@@ -195,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Pause typing animation when user focuses on input
     moodInputBox.addEventListener('focus', () => {
+        moodInputBox.placeholder = ''; //Clear plaholder text
         clearTimeout(typeEffectTimer); // Clear the animation when focused
     });
 
@@ -202,20 +246,37 @@ document.addEventListener('DOMContentLoaded', () => {
     moodInputBox.addEventListener('blur', () => {
         if (moodInputBox.value.trim() === '') {
             clearTimeout(typeEffectTimer); // Clear any existing animation
+            
+            // Reset animation state for smooth restart
+            currentText = '';
+            isTyping = true;
+            charIndex = 0;
+            
             typeEffectTimer = setTimeout(typeEffect, 1000);
         }
     });
 
-    // Disable button during submission
     function setButtonState(disabled) {
         submitMoodButton.disabled = disabled;
         submitMoodButton.textContent = disabled ? 'Analysing your feelings...' : 'Turn your mood into music ';
+        
+        if (disabled) {
+            showLoading('Analysing your feelings...');
+        } else {
+            hideLoading();
+        }
     }
 
     function setFindAnotherButtonState(disabled) {
         const findAnotherButton = document.getElementById('find-another-button');
         findAnotherButton.disabled = disabled;
         findAnotherButton.textContent = disabled ? 'Finding another song...' : 'Find Another Song';
+        
+        if (disabled) {
+            showLoading('Finding another song...');
+        } else {
+            hideLoading();
+        }
     }
 
     submitMoodButton.addEventListener('click', async () => {
@@ -333,3 +394,24 @@ document.addEventListener('DOMContentLoaded', () => {
         origin: 'bottom'
     });
 });
+
+// Loading animation control functions
+function showLoading(message = 'Analysing your feelings...') {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        const loadingText = document.getElementById('loading-text');
+        if (loadingText) {
+            loadingText.textContent = message;
+        }
+        loadingOverlay.classList.add('show');
+        document.body.classList.add('popup-open');
+    }
+}
+
+function hideLoading() {
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.remove('show');
+        document.body.classList.remove('popup-open');
+    }
+}

@@ -35,6 +35,7 @@
         <div class="results-overlay" id="results-overlay"></div>
         <div id="results-container" class="results-container">
             <button class="close-button" id="close-button">×</button>
+            <p id="mood-confidence" class="mood-confidence">We think you're feeling <span id="mood-name">happy</span> (<span id="mood-score">0%</span> confidence).</p>
             <h2>Your Perfect Track</h2>
             <div id="top-track-info">
                 <img id="top-track-image" src="" alt="Album Cover">
@@ -58,6 +59,15 @@
             <div class="action-buttons">
                 <button class="find-another-button" id="find-another-button">Find Another Song</button>
             </div>
+        </div>
+
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="loading-cards">
+                <div class="loading-card"></div>
+                <div class="loading-card"></div>
+                <div class="loading-card"></div>
+            </div>
+            <p class="loading-text" id="loading-text">Analysing your feelings...</p>
         </div>
 
         <div class="sections-container">

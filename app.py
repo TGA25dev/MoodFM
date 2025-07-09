@@ -158,6 +158,13 @@ def mood_endpoint():
             "rickroll_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         }), 200
     
+    elif text == "skibidi":
+        logger.info("What the freak is that ?")
+        return jsonify({
+            "skibidi": "Ooopsie",
+            "skibidi_url": "https://www.instagram.com/thibo888/"
+        }), 200
+    
     mood_analysis = get_mood(text)
     if not mood_analysis or mood_analysis[0] is None:
         return jsonify({
@@ -173,8 +180,8 @@ def mood_endpoint():
 
     return jsonify({
         "dominant_mood": dominant_mood,
-        "mood_score": mood_score
-    }), 200
+        "mood_score": f"{int(round(float(mood_score) * 100))}%"
+        }), 200
 
 @app.route('/music', methods=['POST'])
 @limiter.limit(os.getenv("MUSIC_ENDPOINT_LIMIT", "10") + " per minute")
