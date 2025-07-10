@@ -49,7 +49,7 @@
     "fear": "scared",
     "joy": "happy",
     "sadness": "sad",
-    "suprise": "surprised"
+    "surprise": "surprised"
   },
 
   "placeholders": [
@@ -66,5 +66,11 @@
     "I just got dumped, I feel so sad...",
     "I just got a promotion, I'm so excited!",
     "That day is amazing!"
-  ]
+  ],
+
+  "404":
+  {
+    "subtitle": "Song not found.<br>Neither was the page...",
+    "getHomeButton": "Restart The Vibe"
+  }
 }

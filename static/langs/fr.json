@@ -49,7 +49,7 @@
         "fear": "effrayé",
         "joy": "heureux",
         "sadness": "triste",
-        "suprise": "surpris"
+        "surprise": "surpris"
     },
 
     "placeholders": [
@@ -62,5 +62,11 @@
     "J'ai été pris ! Je pensais pas que ça arriverait !",
     "Il pleut, c'est tellement ennuyant...",
     "Cette journée est incroyable !"
-  ]
+  ],
+
+  "404":
+    {
+        "subtitle": "Chanson non trouvée.<br>Tout comme cette page d'ailleurs...",
+        "getHomeButton": "Repartir de zéro"
+    }
 }

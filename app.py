@@ -122,6 +122,9 @@ def ratelimit_error(error):
 @app.errorhandler(404)
 def page_not_found(error):
     logger.warning(f"Page not found: {error}")
+    if request.accept_mimetypes.accept_html:
+        return render_template('404.html'), 404
+    #otherwise it returns JSON
     return jsonify({'error': 'Page not found'}), 404
 
 #Basic Root

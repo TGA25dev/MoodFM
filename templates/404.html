@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>404 - Page Not Found | MoodFM</title>
+    <meta name="theme-color" content="#1a1a3a">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/404.css') }}?{{ cache_buster }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="header-title">404</h1>
+            <p data-i18n="subtitle" class="header-subtitle">Song not found. Neither was the page...</p>
+        </div>
+        
+        <div class="navigation">
+            <a data-i18n="getHomeButton" href="/" class="home-button">Restart The Vibe</a>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='404.js') }}?{{ cache_buster }}"></script>
+</body>
+</html>
