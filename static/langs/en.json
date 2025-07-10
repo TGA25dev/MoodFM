@@ -1,0 +1,70 @@
+{
+  "page": {
+    "title": "MoodFM - Your feelings, your music"
+  },
+
+  "navbar": {
+    "howItWorks": "How it works",
+    "about": "About"
+  },
+
+  "header": {
+    "subtitle": "Your feelings, your music"
+  },
+
+  "submit": {
+    "button": "Turn your mood into music",
+    "inputBox": "How are you feeling today?"
+  },
+
+  "scrollInstructions": "Don't forget to scroll down!",
+
+  "results": {
+    "confidence": "We think you're feeling {{mood}} ({{score}} confidence).",
+    "perfectTrack": "Your Perfect Track",
+    "findAnotherButton": "Find Another Song"
+  },
+
+  "loader": {
+    "loadingText": "Analysing your feelings..."
+  },
+
+  "about": {
+    "title": "About MoodFM",
+    "content": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Illum suscipit itaque quo excepturi laudantium quod, perferendis odit nam consequuntur cumque molestiae est, amet pariatur cupiditate! Laudantium voluptates assumenda reprehenderit architecto! Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, inventore, non blanditiis, nostrum laborum provident minima veritatis beatae aut corrupti sapiente eum iusto a quis? Quas recusandae eveniet qui vel?"
+  },
+
+  "how-it-works": {
+    "title": "How it Works",
+    "content": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Deleniti, quidem incidunt impedit nihil quisquam quas, sapiente officiis rem sed expedita a ratione? Quod doloremque assumenda vitae perferendis modi illo maiores."
+  },
+
+  "footer": {
+    "goUpLink": "Go up ↑"
+  },
+
+  "feelings": {
+    "anger": "angry",
+    "disgust": "disgusted",
+    "fear": "scared",
+    "joy": "happy",
+    "sadness": "sad",
+    "suprise": "surprised"
+  },
+
+  "placeholders": [
+    "Just got home, I failed my exam...",
+    "I'm going to a party tonight!",
+    "I'm so tired, I need to sleep...",
+    "That day was awful! I'm fed up with everything!",
+    "Its summer, its hot, what an amazing day to go out!!",
+    "I just crashed my car, I feel so bad...",
+    "That day was amazing! I feel so happy!",
+    "I got the job! Didn't think I would!",
+    "It's raining, so boring...",
+    "Hopped on the plane at LAX with a dream and my cardigan",
+    "I just got dumped, I feel so sad...",
+    "I just got a promotion, I'm so excited!",
+    "That day is amazing!"
+  ]
+}

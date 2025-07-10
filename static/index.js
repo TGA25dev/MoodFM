@@ -2,13 +2,33 @@ async function fetch_best_music(mood, setButtonState) {
     try {
         console.log(`Fetching best music for mood: ${mood}`);
         
+        // Translate mood name if needeeed
+        const currentLang = localStorage.getItem('moodFmLang') || 'en';
+        let translatedMood = mood;
+        
+        try {
+            const translationResponse = await fetch(`/static/langs/${currentLang}.json`);
+            if (translationResponse.ok) {
+                const translations = await translationResponse.json();
+                //Try to get the translated mood name from feelings section
+                const translatedMoodName = getNestedTranslation(translations, `feelings.${mood}`);
+                if (translatedMoodName) {
+                    translatedMood = translatedMoodName;
+                }
+            }
+        } catch (translationError) {
+            console.error('Error fetching mood translations:', translationError);
+            // Continue with original mood if translation fails
+        }
+        
         const response = await fetch('/music', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ mood: mood })
-        });
+                });
+        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `Server error: ${response.status}`);
@@ -36,6 +56,14 @@ async function fetch_best_music(mood, setButtonState) {
         // Set track info
         topTrackTitle.textContent = data.spotify?.name || 'Unknown Title';
         topTrackArtist.textContent = data.spotify?.artist || 'Unknown Artist';
+        
+
+        const moodNameElements = document.querySelectorAll('.mood-name, #mood-name');
+        moodNameElements.forEach(el => {
+            if (el) {
+                el.textContent = translatedMood;
+            }
+        });
         
         if (data.spotify?.cover_image) {
             topTrackImage.src = data.spotify.cover_image;
@@ -120,11 +148,37 @@ async function submitMood(moodInput, setButtonState) {
         console.log('Server response:', data);
         
         if (data.dominant_mood) {
-            const conversationalMood = convertMoodToConversational(data.dominant_mood);
+            //get current language
+            const currentLang = localStorage.getItem('moodFmLang') || 'en';
             
-            // Update the mood confidence display
-            document.getElementById('mood-score').textContent = data.mood_score;
-            document.getElementById('mood-name').textContent = conversationalMood;
+            const moodNameEl = document.getElementById('mood-name');
+            const moodScoreEl = document.getElementById('mood-score');
+            
+            if (moodNameEl && moodScoreEl) {
+                const conversationalMood = convertMoodToConversational(data.dominant_mood);
+                
+                const confidenceScore = data.mood_score;
+                
+                moodNameEl.textContent = conversationalMood;
+                moodScoreEl.textContent = confidenceScore;
+                
+                fetch(`/static/langs/${currentLang}.json`)
+                    .then(response => response.json())
+                    .then(translations => {
+                        const translation = getNestedTranslation(translations, 'results.confidence');
+                        if (translation) {
+                            const moodConfidence = document.getElementById('mood-confidence');
+                            if (moodConfidence) {
+                                let formattedText = translation
+                                    .replace('{{mood}}', `<span id="mood-name">${conversationalMood}</span>`)
+                                    .replace('{{score}}', `<span id="mood-score">${confidenceScore}</span>`);
+                                
+                                moodConfidence.innerHTML = formattedText;
+                            }
+                        }
+                    })
+                    .catch(err => console.error('Error applying translation:', err));
+            }
             
             await fetch_best_music(data.dominant_mood, setButtonState);
 
@@ -148,6 +202,11 @@ async function submitMood(moodInput, setButtonState) {
     }
 }
 
+function getNestedTranslation(obj, path) {
+    const keys = path.split('.');
+    return keys.reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
+}
+
 function convertMoodToConversational(mood) {
     const moodMap = {
         "anger": "angry",
@@ -165,36 +224,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitMoodButton = document.getElementById('submit_mood_button');
     const moodInputBox = document.getElementById('mood_input_box');
 
-    const resultsContainer = document.querySelector('.results-container');
-    const topTrackTitle = document.getElementById('top-track-title');
-    const topTrackArtist = document.getElementById('top-track-artist');
-    const topTrackImage = document.getElementById('top-track-image'); 
-
     // Store the last processed mood for rerolling
     let lastProcessedMood = null;
 
     // Dynamic placeholder configuration
-    const placeholders = [
-        "Just got home, I failed my exam...",
-        "I'm going to a party tonight!",
-        "I'm so tired, I need to sleep..",
-        "That day was awful! I'm fed up with everything !",
-        "Its summer, its hot, what an amazing day to go out !!",
-        "I just crashed my car, I feel so bad...",
-        "That day was amazing! I feel so happy!",
-        "I got the job! Didn't think I would!",
-        "It's raining, so boring...",
-        "Hopped on the plane at LAX with a dream and my cardigan",
-        "I just got dumped, I feel so sad...",
-        "I just got a promotion, I'm so excited!",
-        "That day is amazing !"
+    let placeholders = [
+        "How do you feel today?",
     ];
+    
+    // Try to load placeholders from current language
+    loadPlaceholdersFromCurrentLanguage();
+    
+    // Listen for language changes
+    document.addEventListener('languageChanged', (event) => {
+        loadPlaceholdersFromTranslations(event.detail.translations);
+    });
+
+    function loadPlaceholdersFromCurrentLanguage() {
+        const currentLang = localStorage.getItem('moodFmLang') || 
+                        (navigator.language.startsWith('fr') ? 'fr' : 'en');
+        
+        fetch(`/static/langs/${currentLang}.json`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${currentLang}.json`);
+                }
+                return response.json();
+            })
+            .then(translations => {
+                loadPlaceholdersFromTranslations(translations);
+            })
+            .catch(error => {
+                console.error('Error loading placeholders:', error);
+            });
+    }
+    
+    function loadPlaceholdersFromTranslations(translations) {
+        const translatedPlaceholders = getNestedTranslation(translations, 'placeholders');
+        if (translatedPlaceholders && Array.isArray(translatedPlaceholders) && translatedPlaceholders.length > 0) {
+            placeholders = translatedPlaceholders;
+            
+            // Reset the typing animation
+            resetTypingAnimation();
+        }
+    }
 
     let currentPlaceholderIndex = Math.floor(Math.random() * placeholders.length);
     let currentText = '';
     let isTyping = true;
     let charIndex = 0;
     let typeEffectTimer = null;
+
+    function resetTypingAnimation() {
+        // Clear any existing animation
+        clearTimeout(typeEffectTimer);
+        
+        // Reset animation state
+        currentText = '';
+        isTyping = true;
+        charIndex = 0;
+        currentPlaceholderIndex = Math.floor(Math.random() * placeholders.length);
+        
+        // Start animation again
+        typeEffect();
+    }
 
     function typeEffect() {
         const currentPlaceholder = placeholders[currentPlaceholderIndex];
@@ -258,11 +351,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setButtonState(disabled) {
         submitMoodButton.disabled = disabled;
-        submitMoodButton.textContent = disabled ? 'Analysing your feelings...' : 'Turn your mood into music ';
         
         if (disabled) {
-            showLoading('Analysing your feelings...');
+            submitMoodButton.textContent = 'Analysing your feelings...';
+            showLoading();
         } else {
+
+            const currentLang = localStorage.getItem('moodFmLang') || 
+                            (navigator.language.startsWith('fr') ? 'fr' : 'en');
+            
+            fetch(`/static/langs/${currentLang}.json`)
+                .then(response => response.json())
+                .then(translations => {
+                    const buttonText = getNestedTranslation(translations, "submit.button") || 'Turn your mood into music';
+                    submitMoodButton.textContent = buttonText;
+                })
+                .catch(err => {
+                    console.error('Error getting button translation:', err);
+                    submitMoodButton.textContent = 'Turn your mood into music';
+                });
+            
             hideLoading();
         }
     }
@@ -396,12 +504,26 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Loading animation control functions
-function showLoading(message = 'Analysing your feelings...') {
+function showLoading() {
     const loadingOverlay = document.getElementById('loading-overlay');
     if (loadingOverlay) {
         const loadingText = document.getElementById('loading-text');
         if (loadingText) {
-            loadingText.textContent = message;
+            const currentLang = localStorage.getItem('moodFmLang') ||
+            (navigator.language.startsWith('fr') ? 'fr' : 'en');
+
+            fetch(`/static/langs/${currentLang}.json`)
+            .then(response => response.json())
+            .then(translations => {
+                const translatedMessage =
+                getNestedTranslation(translations, 'loader.loadingText') ||
+                'Analysing your feelings...';
+                loadingText.textContent = translatedMessage;
+            })
+            .catch(err => {
+                console.error('Error loading translation:', err);
+                loadingText.textContent = 'Analysing your feelings...';
+            });
         }
         loadingOverlay.classList.add('show');
         document.body.classList.add('popup-open');

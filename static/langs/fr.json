@@ -1,0 +1,66 @@
+{
+    "page": {
+        "title": "MoodFM - Tes emotions, ta musique"
+    },
+
+    "navbar": {
+        "howItWorks": "Comment ça marche",
+        "about": "À propos"
+    },
+
+    "header": {
+        "subtitle": "Tes emotions, ta musique"
+    },
+
+    "submit": {
+        "button": "Trouver la musique idéale",
+        "inputBox": "Comment vous sentez-vous aujourd'hui ?"
+    },
+
+    "scrollInstructions": "N'oubliez pas d'aller faire un tour en bas de page !",
+
+    "results": {
+        "confidence": "Nous pensons que vous êtes {{mood}} (certitude : {{score}}).",
+        "perfectTrack": "Votre morceau parfait",
+        "findAnotherButton": "Trouver un autre morceau"
+    },
+
+    "loader": {
+        "loadingText": "Analyse de vos émotions en cours..."
+    },
+
+    "about": {
+        "title": "À propos de MoodFM",
+        "content": "Lorem"
+    },
+
+    "howItWorks": {
+        "title": "Comment ça marche",
+        "content": "Lorem"
+    },
+
+    "footer": {
+        "goUpLink": "Remonter ↑"
+    },
+
+    "feelings": {
+        "anger": "en colère",
+        "disgust": "dégoûté",
+        "fear": "effrayé",
+        "joy": "heureux",
+        "sadness": "triste",
+        "suprise": "surpris"
+    },
+
+    "placeholders": [
+    "Je viens de rentrer à la maison, j'ai raté mon examen...",
+    "Je vais à une fête ce soir !",
+    "Je suis tellement fatigué, j'ai besoin de dormir...",
+    "C'est l'été, il fait chaud, trop bien !!",
+    "Je viens d'avoir un accident... Je me sens trop mal..",
+    "Cette journée était incroyable !",
+    "J'ai été pris ! Je pensais pas que ça arriverait !",
+    "Il pleut, c'est tellement ennuyant...",
+    "Cette journée est incroyable !"
+  ]
+}

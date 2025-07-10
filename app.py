@@ -12,6 +12,8 @@ from redis import Redis
 import bleach
 from datetime import datetime
 
+from modules.translation.translator import translate_text, detect_languages
+
 from modules.mood.mood_engine import get_mood
 from modules.music.last_fm_data import get_top_track_for_mood
 
@@ -136,7 +138,7 @@ def index():
 
 @app.route('/mood', methods=['POST'])
 @limiter.limit(os.getenv("MOOD_ENDPOINT_LIMIT", "10") + " per minute")
-def mood_endpoint():
+async def mood_endpoint():
     """
     Enepoint to analyse mood from user text input
     """
@@ -164,6 +166,16 @@ def mood_endpoint():
             "skibidi": "Ooopsie",
             "skibidi_url": "https://www.instagram.com/thibo888/"
         }), 200
+    
+    #TRANSLATION
+    input_langage = await detect_languages(text)
+    if input_langage != "en":
+        try:
+            text = await translate_text(text)
+            logger.debug(f"Translated text from {input_langage} to English: {text}")
+        except Exception as e:
+            logger.error(f"Translation error: {e}")
+            return jsonify({"error": "Translation service is temporarily unavailable. Please try again later."}), 503
     
     mood_analysis = get_mood(text)
     if not mood_analysis or mood_analysis[0] is None:

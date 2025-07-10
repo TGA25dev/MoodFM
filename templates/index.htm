@@ -13,35 +13,48 @@
         <div>
             <div id="header">
                 <h1 class="header-title">MoodFM</h1>
-                <p class="header-subtitle">Your feelings, your music</p>
+                <p data-i18n="header.subtitle" class="header-subtitle">Your feelings, your music</p>
             </div>
             <div id="navbar">
                 <ul class="nav-links">
-                    <li><a href="#how-it-works">How it works</a></li>
-                    <li><a href="#about">About</a></li>
+                    <li><a href="#how-it-works" data-i18n="navbar.howItWorks">How it works</a></li>
+                    <li><a href="#about" data-i18n="navbar.about">About</a></li>
                     <li><a target="_blank" href="https://hackclub.com/">Hackclub</a></li>
+                    <li class="lang-dropdown">
+                        <button id="lang-switcher" class="lang-switcher">
+                            <span id="current-lang">EN</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div id="lang-dropdown-content" class="lang-dropdown-content">
+                            <a href="#" data-lang="en" class="lang-option"><i class="fas fa-check lang-check"></i> English</a>
+                            <a href="#" data-lang="fr" class="lang-option"><i class="fas fa-check lang-check"></i> Français</a>
+                        </div>
+                    </li>
                 </ul>
             </div>
         </div>
 
         <div id="submit-container">
             <div class="search-container">
-                <button class="submit-mood-button" id="submit_mood_button">Turn your mood into music </button>
-                <input class="mood-input-box" id="mood_input_box" type="text" placeholder="How are you feeling today?">
+                <button data-i18n="submit.button" class="submit-mood-button" id="submit_mood_button">Turn your mood into music </button>
+                <input data-i18n="submit.inputBox" class="mood-input-box" id="mood_input_box" type="text" placeholder="How are you feeling today?">
             </div>
-            <p class="scroll-instructions">Don't forget to scroll down !</p>
+            <p data-i18n="scrollInstructions" class="scroll-instructions">Don't forget to scroll down !</p>
         </div>
 
         <div class="results-overlay" id="results-overlay"></div>
         <div id="results-container" class="results-container">
             <button class="close-button" id="close-button">×</button>
-            <p id="mood-confidence" class="mood-confidence">We think you're feeling <span id="mood-name">happy</span> (<span id="mood-score">0%</span> confidence).</p>
-            <h2>Your Perfect Track</h2>
+            <p data-i18n="results.confidence" id="mood-confidence" class="mood-confidence">We think you're feeling <span id="mood-name">happy</span> (<span id="mood-score">0%</span> confidence).</p>
+
+            <h2 data-i18n="results.perfectTrack">Your Perfect Track</h2>
             <div id="top-track-info">
+
                 <img id="top-track-image" src="" alt="Album Cover">
                 <p id="top-track-title">Track Title</p>
                 <p id="top-track-artist">Artist Name</p>
                 <div id="streaming-links">
+
                     <a id="spotify-link" class="streaming-button spotify" href="#" target="_blank">
                         <span class="icon"><i class="fab fa-spotify"></i></span> Spotify
                     </a>
@@ -57,7 +70,7 @@
                 </div>
             </div>
             <div class="action-buttons">
-                <button class="find-another-button" id="find-another-button">Find Another Song</button>
+                <button data-i18n="results.findAnotherButton" class="find-another-button" id="find-another-button">Find Another Song</button>
             </div>
         </div>
 
@@ -67,23 +80,24 @@
                 <div class="loading-card"></div>
                 <div class="loading-card"></div>
             </div>
-            <p class="loading-text" id="loading-text">Analysing your feelings...</p>
+            <p data-i18n="loader.loadingText" class="loading-text" id="loading-text">Analysing your feelings...</p>
         </div>
 
         <div class="sections-container">
             <div id="about" class="section">
-                <h2>About MoodFM</h2>
-                <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Illum suscipit itaque quo excepturi laudantium quod, perferendis odit nam consequuntur cumque molestiae est, amet pariatur cupiditate! Laudantium voluptates assumenda reprehenderit architecto! Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, inventore, non blanditiis, nostrum laborum provident minima veritatis beatae aut corrupti sapiente eum iusto a quis? Quas recusandae eveniet qui vel?</p>
+                <h2 data-i18n="about.title">About MoodFM</h2>
+                <p data-i18n="about.content">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Illum suscipit itaque quo excepturi laudantium quod, perferendis odit nam consequuntur cumque molestiae est, amet pariatur cupiditate! Laudantium voluptates assumenda reprehenderit architecto! Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, inventore, non blanditiis, nostrum laborum provident minima veritatis beatae aut corrupti sapiente eum iusto a quis? Quas recusandae eveniet qui vel?</p>
             </div>
 
             <div id="how-it-works" class="section">
-                <h2>How it Works</h2>
-                <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Deleniti, quidem incidunt impedit nihil quisquam quas, sapiente officiis rem sed expedita a ratione? Quod doloremque assumenda vitae perferendis modi illo maiores.</p>
+                <h2 data-i18n="howItWorks.title">How it Works</h2>
+                <p data-i18n="howItWorks.content">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Deleniti, quidem incidunt impedit nihil quisquam quas, sapiente officiis rem sed expedita a ratione? Quod doloremque assumenda vitae perferendis modi illo maiores.</p>
             </div>
         </div>
 
-        <a href="#top" class="go-up-link" id="go-up-link">Go up ↑</a>
+        <a data-i18n="footer.goUpLink" href="#top" class="go-up-link" id="go-up-link">Go up ↑</a>
     </body>
     <script src="{{ url_for('static', filename='index.js') }}?{{ cache_buster }}"></script>
+    <script src="{{ url_for('static', filename='lang-switcher.js') }}?{{ cache_buster }}"></script>
     
 </html>
