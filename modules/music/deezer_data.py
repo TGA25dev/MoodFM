@@ -15,7 +15,8 @@ def search_track_on_deezer(artist_name, track_name):
         return {
             #"title": first_track.title,
             #"artist": first_track.artist.name,
-            "url": first_track.link
+            "url": first_track.link,
+            "preview": first_track.preview,
         }
     else:
         return None

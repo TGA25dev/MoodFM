@@ -17,7 +17,7 @@
         "inputBox": "Comment vous sentez-vous aujourd'hui ?"
     },
 
-    "scrollInstructions": "N'oubliez pas d'aller faire un tour en bas de page !",
+    "scrollInstructions": "Pensez à aller voir en bas de page !",
 
     "results": {
         "confidence": "Nous pensons que vous êtes {{mood}} (certitude : {{score}}).",

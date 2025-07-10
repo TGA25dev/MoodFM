@@ -74,6 +74,91 @@ async function fetch_best_music(mood, setButtonState) {
         
         topTrackImage.alt = `${data.spotify?.name || 'Unknown'} by ${data.spotify?.artist || 'Unknown'}`;
         
+        const existingWrapper = document.querySelector('.track-image-wrapper');
+        if (existingWrapper) {
+            const imageParent = existingWrapper.parentNode;
+            const image = existingWrapper.querySelector('#top-track-image');
+            if (image && imageParent) {
+                // Remove the old wrapper and put the image back directly
+                imageParent.replaceChild(image, existingWrapper);
+            }
+        }
+        
+        //create a fresh wrapper
+        const imageWrapper = document.createElement('div');
+        imageWrapper.className = 'track-image-wrapper';
+        const playButton = document.createElement('div');
+        playButton.className = 'track-play-button';
+        playButton.innerHTML = '<i class="fas fa-play"></i>';
+        
+        const imageParent = topTrackImage.parentNode;
+
+        imageParent.replaceChild(imageWrapper, topTrackImage);
+        imageWrapper.appendChild(topTrackImage);
+        imageWrapper.appendChild(playButton);
+        
+        //New audio element
+        let audioPreview = document.getElementById('audio-preview');
+        if (!audioPreview) {
+            audioPreview = document.createElement('audio');
+            audioPreview.id = 'audio-preview';
+            document.body.appendChild(audioPreview);
+        } else {
+            // Reset the audio element for new songs
+            audioPreview.pause();
+            audioPreview.currentTime = 0;
+            audioPreview.src = ''; // Clear source
+            audioPreview.load(); // Reload to clear any pending operations
+        }
+        
+        if (data.deezer?.preview) {
+          
+            audioPreview.src = data.deezer.preview;
+            audioPreview.load();
+            playButton.style.display = 'flex';
+            
+            // Add click event for play/pause
+            let isPlaying = false;
+
+            const playPauseHandler = (e) => {
+                e.stopPropagation();
+                
+                if (isPlaying) {
+                    audioPreview.pause();
+                    playButton.innerHTML = '<i class="fas fa-play"></i>';
+                    isPlaying = false;
+                } else {
+                    // Preload audio before playing
+                    audioPreview.load();
+                    
+                    const playPromise = audioPreview.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            playButton.innerHTML = '<i class="fas fa-pause"></i>';
+                            isPlaying = true;
+                        }).catch(err => {
+                            console.error('Error playing audio:', err);
+                            // Show play button if play fails
+                            playButton.innerHTML = '<i class="fas fa-play"></i>';
+                            isPlaying = false;
+                        });
+                    }
+                }
+            };
+            
+            // Add click handler just to the play button
+            playButton.onclick = playPauseHandler;
+            
+            // Reset play button when audio ends
+            audioPreview.addEventListener('ended', () => {
+                isPlaying = false;
+                playButton.innerHTML = '<i class="fas fa-play"></i>';
+            });
+        } else {
+            playButton.style.display = 'none';
+        }
+        
         // Set streaming links
         if (data.spotify?.url) {
             spotifyLink.href = data.spotify.url;
@@ -378,11 +463,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function setFindAnotherButtonState(disabled) {
         const findAnotherButton = document.getElementById('find-another-button');
         findAnotherButton.disabled = disabled;
-        findAnotherButton.textContent = disabled ? 'Finding another song...' : 'Find Another Song';
         
         if (disabled) {
+            findAnotherButton.textContent = 'Finding another song...';
             showLoading('Finding another song...');
         } else {
+            // Get current language
+            const currentLang = localStorage.getItem('moodFmLang') || 
+                            (navigator.language.startsWith('fr') ? 'fr' : 'en');
+            
+            fetch(`/static/langs/${currentLang}.json`)
+                .then(response => response.json())
+                .then(translations => {
+                    const buttonText = getNestedTranslation(translations, "results.findAnotherButton") || 'Find Another Song';
+                    findAnotherButton.textContent = buttonText;
+                })
+                .catch(err => {
+                    console.error('Error getting button translation:', err);
+                    findAnotherButton.textContent = 'Find Another Song';
+                });
+            
             hideLoading();
         }
     }
@@ -440,6 +540,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const resultsContainer = document.getElementById('results-container');
         const resultsOverlay = document.getElementById('results-overlay');
         
+        // Stop audio playback when closing the popup
+        const audioPreview = document.getElementById('audio-preview');
+        if (audioPreview) {
+            audioPreview.pause();
+            audioPreview.currentTime = 0;
+            // Remove the source
+            audioPreview.src = '';
+            // Reset play button
+            const playButton = document.querySelector('.track-play-button');
+            if (playButton) {
+                playButton.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        }
+        
         // Remove the show class to hide the popup
         resultsContainer.classList.remove('show');
         resultsOverlay.classList.remove('show');
@@ -448,6 +562,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('results-overlay').addEventListener('click', function() {
         const resultsContainer = document.getElementById('results-container');
         const resultsOverlay = document.getElementById('results-overlay');
+        
+        const audioPreview = document.getElementById('audio-preview');
+        if (audioPreview) {
+            audioPreview.pause();
+            audioPreview.currentTime = 0;
+            audioPreview.src = '';
+
+            const playButton = document.querySelector('.track-play-button');
+            if (playButton) {
+                playButton.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        }
         
         resultsContainer.classList.remove('show');
         resultsOverlay.classList.remove('show');
@@ -501,6 +627,71 @@ document.addEventListener('DOMContentLoaded', () => {
         delay: 600,
         origin: 'bottom'
     });
+    
+    // Mobile menu functionality
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileDropdown = document.getElementById('mobile-dropdown-content');
+
+    if (mobileMenuButton && mobileDropdown) {
+        mobileMenuButton.addEventListener('click', function() {
+            mobileDropdown.classList.toggle('show');
+        });
+        
+        // Close mobile dropdown when clicking elsewhere
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('#mobile-nav')) {
+                mobileDropdown.classList.remove('show');
+            }
+        });
+        
+        // Close mobile dropdown when a link is clicked
+        const mobileLinks = mobileDropdown.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                mobileDropdown.classList.remove('show');
+            });
+        });
+        
+        const mobileLangOptions = mobileDropdown.querySelectorAll('.lang-option');
+        mobileLangOptions.forEach(option => {
+            option.addEventListener('click', function(event) {
+                event.preventDefault();
+                const lang = this.getAttribute('data-lang');
+                if (lang) {
+
+                    const currentLangEl = document.getElementById('current-lang');
+                    if (currentLangEl) {
+                        currentLangEl.textContent = lang.toUpperCase();
+                    }
+                    
+                    // Save the language preference to localStorage
+                    localStorage.setItem('moodFmLang', lang);
+                    
+                    const langChangeEvent = new CustomEvent('languageSelect', {
+                        detail: { language: lang }
+                    });
+                    document.dispatchEvent(langChangeEvent);
+
+                    
+                    const allLangOptions = document.querySelectorAll('.lang-option');
+                    allLangOptions.forEach(opt => {
+                        opt.classList.toggle('active', opt.getAttribute('data-lang') === lang);
+                    });
+                    
+                    // Close the mobile dropdown
+                    mobileDropdown.classList.remove('show');
+                    
+                    if (typeof updatePageTranslations === 'function') {
+                        updatePageTranslations(lang);
+                    } else {
+                        //reload the page to apply translations
+                        window.location.reload();
+                    }
+                }
+            });
+        });
+    }
+
 });
 
 // Loading animation control functions
