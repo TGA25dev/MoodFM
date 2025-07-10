@@ -150,17 +150,18 @@ async def mood_endpoint():
     text = data['text']
     # Sanitize input to prevent XSS attacks
     text = bleach.clean(text)
+    ee_text = text.lower().replace(" ", "")
     if not text:
         return jsonify({"error": "Text cannot be empty"}), 400
     
-    if text == "rickroll":
+    if ee_text == "rickroll":
         logger.info("Rickroll detected, redirecting to YouTube")
         return jsonify({
             "rickroll": "You've been Rickrolled !",
             "rickroll_url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         }), 200
     
-    elif text == "skibidi":
+    elif ee_text == "skibidi":
         logger.info("What the freak is that ?")
         return jsonify({
             "skibidi": "Ooopsie",

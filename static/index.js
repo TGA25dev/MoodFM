@@ -268,11 +268,16 @@ async function submitMood(moodInput, setButtonState) {
             await fetch_best_music(data.dominant_mood, setButtonState);
 
         } else if (data.rickroll) {
-            open(data.rickroll_url, '_blank');
+            window.open(data.rickroll_url, '_blank') || window.location.assign(data.rickroll_url);
 
         } else if (data.skibidi_url) {
-            open(data.skibidi_url, '_blank');
-
+            const newWindow = window.open(data.skibidi_url, '_blank');
+            
+            // Check if popup was blocked
+            if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+                // If blocked, redirect the current page instead
+                window.location.href = data.skibidi_url;
+            }
         } else {
             console.warn('No dominant mood returned from server');
         }
@@ -415,13 +420,21 @@ document.addEventListener('DOMContentLoaded', () => {
     typeEffect();
 
     // Pause typing animation when user focuses on input
+    let isInputFocused = false;
+    
     moodInputBox.addEventListener('focus', () => {
         moodInputBox.placeholder = ''; //Clear plaholder text
         clearTimeout(typeEffectTimer); // Clear the animation when focused
+        isInputFocused = true;
+        
+        // Ensure container stays visible when focusing on input
+        submitContainer.classList.remove('hidden');
     });
 
     //Resume typing animation when user leaves input
     moodInputBox.addEventListener('blur', () => {
+        isInputFocused = false;
+        
         if (moodInputBox.value.trim() === '') {
             clearTimeout(typeEffectTimer); // Clear any existing animation
             
@@ -584,12 +597,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastScrollPosition = 0;
     let scrollThreshold = 100;
     
+    // Modify the scroll event handler to check for input focus
     window.addEventListener('scroll', () => {
         const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
         const goUpLink = document.getElementById('go-up-link');
         
-        // Check if scrolled down more than threshold
-        if (currentScrollPosition > scrollThreshold) {
+        // Only hide if input is not focused and we've scrolled enough
+        if (currentScrollPosition > scrollThreshold && !isInputFocused) {
             submitContainer.classList.add('hidden');
             goUpLink.classList.add('show'); // Show the go-up button
         } else {

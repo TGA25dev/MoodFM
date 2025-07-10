@@ -1002,6 +1002,17 @@ body.popup-open {
 
 /* Mobile responsive layout */
 @media (max-width: 768px) {
+  .mood-input-box {
+    font-size: 16px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+    
+  .submit-mood-button, 
+  .find-another-button {
+    -webkit-tap-highlight-color: transparent;
+  }
 
   .header-title {
     font-size: 3rem;
