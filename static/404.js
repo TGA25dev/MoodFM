@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (homeButton && translations['404'].getHomeButton) {
                     homeButton.textContent = translations['404'].getHomeButton;
                 }
+
+                document.title = translations['404'].title || '404 - Page Not Found | MoodFM';
             }
         })
         .catch(error => {

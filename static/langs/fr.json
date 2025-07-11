@@ -65,7 +65,7 @@
   ],
 
   "404":
-    {
+    {   "title": "404 - Page non trouvée | MoodFM",
         "subtitle": "Chanson non trouvée.<br>Tout comme cette page d'ailleurs...",
         "getHomeButton": "Repartir de zéro"
     }

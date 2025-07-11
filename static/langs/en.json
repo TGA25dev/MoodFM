@@ -70,6 +70,7 @@
 
   "404":
   {
+    "title": "404 - Page Not Found | MoodFM",
     "subtitle": "Song not found.<br>Neither was the page...",
     "getHomeButton": "Restart The Vibe"
   }

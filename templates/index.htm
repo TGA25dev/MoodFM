@@ -8,6 +8,9 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?{{ cache_buster }}">
         <script src="https://unpkg.com/scrollreveal@4.0.0/dist/scrollreveal.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <meta name="description" content="MoodFM: Turn your feelings into music recommendations.">
+        <meta name="keywords" content="music, mood, recommendation, playlist, emotion, hackclub, moodfm">
+        <meta name="author" content="TGA25dev">
 
     </head>
     <body>
@@ -60,7 +63,7 @@
 
         <div class="results-overlay" id="results-overlay"></div>
         <div id="results-container" class="results-container">
-            <button class="close-button" id="close-button">×</button>
+            <button class="close-button" id="close-button">x</button>
             <p data-i18n="results.confidence" id="mood-confidence" class="mood-confidence">We think you're feeling <span id="mood-name">happy</span> (<span id="mood-score">0%</span> confidence).</p>
 
             <h2 data-i18n="results.perfectTrack">Your Perfect Track</h2>
