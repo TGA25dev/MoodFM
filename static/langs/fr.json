@@ -22,7 +22,9 @@
     "results": {
         "confidence": "Nous pensons que vous êtes {{mood}} (certitude : {{score}}).",
         "perfectTrack": "Votre morceau parfait",
-        "findAnotherButton": "Trouver un autre morceau"
+        "findAnotherButton": "Trouver un autre morceau",
+        "shareResultButton": "Partager votre trouvaille",
+        "tryByYourselfButton": "Trouvez votre propre musique"
     },
 
     "loader": {
@@ -52,6 +54,10 @@
         "surprise": "surpris"
     },
 
+    "shared": {
+        "headerSubtitle": "Quelqu'un s'est senti <i>{{mood}}</i> et a pensé à vous !"
+    },
+
     "placeholders": [
     "Je viens de rentrer à la maison, j'ai raté mon examen...",
     "Je vais à une fête ce soir !",
@@ -68,5 +74,15 @@
     {   "title": "404 - Page non trouvée | MoodFM",
         "subtitle": "Chanson non trouvée.<br>Tout comme cette page d'ailleurs...",
         "getHomeButton": "Repartir de zéro"
+    },
+
+  "toast": {
+    "welcome": "Écrivez ce que vous voulez. On s'occupe du reste ! 🎧",
+    "noSongToShare": "Aucune musique à partager. Selectionnez d'abord une musique.",
+    "linkCopied": "Lien copié dans le presse-papier. Partagez ce mood avec quelqu'un !",
+    "copyFailed": "Impossible de copier le lien. Veuillez le copier manuellement.",
+    "sharedSongLoadFailed": "Impossible de charger la chanson partagée.",
+    "findAnotherFailed": "Impossible de trouver une autre chanson. Veuillez réessayer plus tard.",
+    "rateLimitExceeded": "Trop de requêtes effectuées. Veuillez réessayer plus tard."
     }
 }

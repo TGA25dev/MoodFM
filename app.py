@@ -17,9 +17,9 @@ from modules.translation.translator import translate_text, detect_languages
 from modules.mood.mood_engine import get_mood
 from modules.music.last_fm_data import get_top_track_for_mood
 
-from modules.music.spotify_data import search_track_on_spotify
+from modules.music.spotify_data import search_track_on_spotify, get_spotify_track_by_id
 from modules.music.ytb_music_data import search_track_on_ytb
-from modules.music.deezer_data import search_track_on_deezer
+from modules.music.deezer_data import search_track_on_deezer, get_deezer_track_by_id
 from modules.music.apple_music_data import search_track_on_apple_music
 
 from modules.ratelimit.ratelimiter import limiter
@@ -106,17 +106,11 @@ def internal_error(error):
 
 @app.errorhandler(429)
 def ratelimit_error(error):    
-    # Get retry-after from the response if available
-    retry_after = None
-    if hasattr(error, 'description') and hasattr(error.description, 'headers'):
-        retry_after = error.description.headers.get('Retry-After')
-    
     logger.warning(f"Rate limit exceeded: {error}")
-    
+
     return jsonify({
-        'error': 'Rate limit exceeded',
-        'retry_after': retry_after,
-    }), 429, {'Retry-After': retry_after} if retry_after else {}
+        'error': 'Rate limit exceeded'
+    }), 429
 
 
 @app.errorhandler(404)
@@ -254,6 +248,133 @@ def music_endpoint():
 
     results["last_fm_url"] = top_track['url']
     return jsonify(results), 200
+
+@app.route('/shared', methods=['GET'])
+@limiter.limit(os.getenv("MUSIC_ENDPOINT_LIMIT", "10") + " per minute")
+def shared_page():
+    """
+    Serve the main page for shared songs
+    """
+    cache_buster = datetime.now().strftime("%Y%m%d%H%M%S")
+    return render_template('index.htm', cache_buster=cache_buster)
+
+@app.route('/shared-lookup', methods=['GET'])
+@limiter.limit(os.getenv("MUSIC_ENDPOINT_LIMIT", "10") + " per minute")
+def shared_song_endpoint():
+    """
+    Endpoint to get song details from a shared link
+    """
+    provider = request.args.get('provider')
+    track_id = request.args.get('id')
+    mood = request.args.get('mood')
+    cover_image = request.args.get('cover')
+    
+    if not provider or not track_id or not mood:
+        return jsonify({"error": "Missing provider or track ID or mood"}), 400
+        
+    # Sanitize inputs
+    provider = bleach.clean(provider)
+    track_id = bleach.clean(track_id)
+    mood = bleach.clean(mood)
+
+    if provider not in ['deezer', 'spotify']:
+        return jsonify({"error": "Unsupported provider"}), 400
+    
+
+    # Normalize mood input
+    mood = mood.lower()
+    if mood not in ['angry', "disgusted", "scared", "joy", "sad", "surprised"]:
+        return jsonify({"error": "Unsupported mood"}), 400
+    
+    try:
+        if provider == 'deezer':
+            # Get song details from Deezer ID
+            track_data = get_deezer_track_by_id(track_id)
+            
+            if track_data:
+                # Also search on other providers for links
+                spotify_data = search_track_on_spotify(track_data.get('title'), track_data.get('artist'))
+                ytb_data = search_track_on_ytb(track_data.get('artist'), track_data.get('title'))
+                apple_data = search_track_on_apple_music(track_data.get('artist'), track_data.get('title'))
+
+                return jsonify({
+                    "name": track_data.get('title'),
+                    "artist": track_data.get('artist'),
+                    "cover_image": cover_image or track_data.get('cover_image'),
+                    "deezer_url": track_data.get('url'),
+                    "preview": track_data.get('preview'),
+                    "spotify_url": spotify_data.get('url') if spotify_data else None,
+                    "youtube_url": ytb_data.get('url') if ytb_data else None,
+                    "apple_music_url": apple_data.get('url') if apple_data else None,
+                    "mood": mood
+                }), 200
+            else:
+                # Get track name and artist from query params for fallback
+                track_name = request.args.get('name')
+                artist_name = request.args.get('artist')
+                
+                if track_name and artist_name:
+                    # Try to find on other platforms
+                    spotify_data = search_track_on_spotify(track_name, artist_name)
+                    ytb_data = search_track_on_ytb(artist_name, track_name)
+                    apple_data = search_track_on_apple_music(artist_name, track_name)
+
+                    return jsonify({
+                        "error": "Track not found on Deezer, trying other providers",
+                        "spotify_url": spotify_data.get('url') if spotify_data else None,
+                        "youtube_url": ytb_data.get('url') if ytb_data else None,
+                        "apple_music_url": apple_data.get('url') if apple_data else None,
+                        "mood": mood,
+                    }), 404
+                else:
+                    return jsonify({"error": "Track not found on Deezer and no fallback information provided"}), 404
+                
+        elif provider == 'spotify':
+            # Get song details from Spotify ID
+            track_data = get_spotify_track_by_id(track_id)
+            
+            if track_data:
+                # For Spotify tracks, try to get preview URL from Deezer
+                deezer_data = search_track_on_deezer(track_data.get('artist'), track_data.get('name'))
+                ytb_data = search_track_on_ytb(track_data.get('artist'), track_data.get('name'))
+                apple_data = search_track_on_apple_music(track_data.get('artist'), track_data.get('name'))
+
+                return jsonify({
+                    "name": track_data.get('name'),
+                    "artist": track_data.get('artist'),
+                    "cover_image": cover_image or track_data.get('cover_image'),
+                    "spotify_url": track_data.get('url'),
+                    "deezer_url": deezer_data.get('url') if deezer_data else None,
+                    "youtube_url": ytb_data.get('url') if ytb_data else None,
+                    "apple_music_url": apple_data.get('url') if apple_data else None,
+                    "preview": deezer_data.get('preview') if deezer_data else None,
+                    "mood": mood
+                }), 200
+            else:
+                # Get track name and artist from query params for fallback
+                track_name = request.args.get('name')
+                artist_name = request.args.get('artist')
+                
+                if track_name and artist_name:
+                    # Try to find on other platforms
+                    deezer_data = search_track_on_deezer(artist_name, track_name)
+                    ytb_data = search_track_on_ytb(artist_name, track_name)
+                    apple_data = search_track_on_apple_music(artist_name, track_name)
+
+                    return jsonify({
+                        "error": "Track not found on Spotify, trying other providers",
+                        "deezer_url": deezer_data.get('url') if deezer_data else None,
+                        "youtube_url": ytb_data.get('url') if ytb_data else None,
+                        "apple_music_url": apple_data.get('url') if apple_data else None,
+                        "preview": deezer_data.get('preview') if deezer_data else None,
+                        "mood": mood
+                    }), 404
+                else:
+                    return jsonify({"error": "Track not found on Spotify and no fallback information provided"}), 404
+            
+    except Exception as e:
+        logger.error(f"Error processing shared song: {e}")
+        return jsonify({"error": "Failed to retrieve track information"}), 500
 
 @app.route('/ping', methods=['GET'])
 @limiter.limit(os.getenv("PING_ENDPOINT_LIMIT", "10") + " per minute")

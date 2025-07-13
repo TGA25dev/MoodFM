@@ -17,6 +17,29 @@ def search_track_on_deezer(artist_name, track_name):
             #"artist": first_track.artist.name,
             "url": first_track.link,
             "preview": first_track.preview,
+            "id": first_track.id,
         }
     else:
+        return None
+
+def get_deezer_track_by_id(track_id):
+    """
+    Get track details from Deezer by track ID
+    """
+    try:
+        track_id = int(track_id)
+        track = client.get_track(track_id)
+        
+        if track:
+            return {
+                "id": track.id,
+                "title": track.title,
+                "artist": track.artist.name,
+                "url": track.link,
+                "preview": track.preview,
+                "cover_image": track.album.cover_xl if hasattr(track, 'album') and track.album else None
+            }
+        return None
+    except Exception as e:
+        print(f"Error fetching Deezer track by ID: {e}")
         return None

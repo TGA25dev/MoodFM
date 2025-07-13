@@ -22,7 +22,9 @@
   "results": {
     "confidence": "We think you're feeling {{mood}} ({{score}} confidence).",
     "perfectTrack": "Your Perfect Track",
-    "findAnotherButton": "Find Another Song"
+    "findAnotherButton": "Find Another Song",
+    "shareResultButton": "Share the mood",
+    "tryByYourselfButton": "Find Your Own Soundtrack"
   },
 
   "loader": {
@@ -52,6 +54,10 @@
     "surprise": "surprised"
   },
 
+  "shared": {
+    "headerSubtitle": "Someone felt <i>{{mood}}</i> and thought of you!"
+  },
+
   "placeholders": [
     "Just got home, I failed my exam...",
     "I'm going to a party tonight!",
@@ -73,5 +79,15 @@
     "title": "404 - Page Not Found | MoodFM",
     "subtitle": "Song not found.<br>Neither was the page...",
     "getHomeButton": "Restart The Vibe"
+  },
+
+  "toast": {
+    "welcome": "Type anything. We’ll find the song ! 🎧",
+    "noSongToShare": "No song available to share. Please find a song first.",
+    "linkCopied": "Link copied to clipboard. Let someone feel this with you !",
+    "copyFailed": "Failed to copy link. Please copy it manually.",
+    "sharedSongLoadFailed": "Could not load shared song.",
+    "findAnotherFailed": "Failed to find another song. Please try again later.",
+    "rateLimitExceeded": "Too many requests. Please try again in a moment."
   }
 }

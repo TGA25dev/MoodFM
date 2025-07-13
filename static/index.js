@@ -1,4 +1,99 @@
+let spotifyTrackId = null;
+let deezerTrackId = null;
+let currentCoverImage = '';
+
+// Global translation cache
+let currentTranslations = null;
+
+// Returns a promise that resolves to the current translations object
+function getCurrentTranslations() {
+    const currentLang = localStorage.getItem('moodFmLang') ||
+        (navigator.language.startsWith('fr') ? 'fr' : 'en');
+    // If already loaded, return cached
+    if (currentTranslations && currentTranslations._lang === currentLang) {
+        return Promise.resolve(currentTranslations);
+    }
+    return fetch(`/static/langs/${currentLang}.json`)
+        .then(response => response.json())
+        .then(translations => {
+            translations._lang = currentLang; // Mark the language
+            currentTranslations = translations;
+            return translations;
+        });
+}
+
+function showToast(message, type = 'info', options = {}) {
+    const container = document.getElementById('toaster-container');
+    if (!container) return;
+
+    // Icons for each type
+    const icons = {
+        success: '<i class="fas fa-check-circle toaster-icon"></i>',
+        error: '<i class="fas fa-times-circle toaster-icon"></i>',
+        info: '<i class="fas fa-info-circle toaster-icon"></i>'
+    };
+
+    // Create toaster element
+    const toast = document.createElement('div');
+    toast.className = `toaster ${type}`;
+    toast.innerHTML = `
+        ${icons[type] || icons.info}
+        <span>${message}</span>
+        <button class="toaster-close" aria-label="Close">&times;</button>
+    `;
+
+    // Remove on click
+    toast.querySelector('.toaster-close').onclick = () => removeToast(toast);
+
+    // Remove after timeout
+    const timeout = options.timeout || 3500;
+    setTimeout(() => removeToast(toast), timeout);
+
+    // Remove with animation
+    function removeToast(toastEl) {
+        toastEl.style.animation = 'toaster-out 0.3s forwards';
+        setTimeout(() => container.removeChild(toastEl), 300);
+    }
+
+    container.appendChild(toast);
+}
+// Show welcome toast only once
+if (!localStorage.getItem('welcomeToastShown')) {
+    getCurrentTranslations().then(translations => {
+        showToast(getNestedTranslation(translations, 'toast.welcome'), 'info');
+        localStorage.setItem('welcomeToastShown', 'true');
+    });
+}
+
 async function fetch_best_music(mood, setButtonState) {
+    //Reset UI from shared mode
+    const resultsContainer = document.getElementById('results-container');
+    if (resultsContainer) resultsContainer.classList.remove('shared-mode');
+
+    const streamingLinks = document.getElementById('streaming-links');
+    if (streamingLinks) streamingLinks.style.display = 'flex';
+
+    const actionButtons = document.querySelector('.action-buttons');
+    if (actionButtons) {
+        Array.from(actionButtons.children).forEach(child => {
+            // Hide "Try By Yourself" button in normal mode
+            if (child.classList.contains('try-by-yourself-button')) {
+                child.style.display = 'none';
+            } else {
+                child.style.display = 'inline-block';
+            }
+        });
+    }
+
+    const perfectTrackTitle = document.getElementById('perfectTrackTitle');
+    if (perfectTrackTitle) perfectTrackTitle.style.display = '';
+
+    const moodConfidence = document.getElementById('mood-confidence');
+    if (moodConfidence) moodConfidence.style.display = '';
+
+    const sharedHeader = document.getElementById('shared-header');
+    if (sharedHeader) sharedHeader.style.display = 'none';
+
     try {
         console.log(`Fetching best music for mood: ${mood}`);
         
@@ -51,13 +146,23 @@ async function fetch_best_music(mood, setButtonState) {
         
         // Show popup with animation and overlay
         resultsContainer.classList.add('show');
+        document.body.classList.add('popup-open'); // Block scrolling
         resultsOverlay.classList.add('show');
+
+        const sharedHeader = document.getElementById('shared-header');
+        if (sharedHeader) sharedHeader.style.display = 'none';
         
         // Set track info
         topTrackTitle.textContent = data.spotify?.name || 'Unknown Title';
         topTrackArtist.textContent = data.spotify?.artist || 'Unknown Artist';
-        
 
+        if (data.spotify?.id !== undefined && data.spotify.id !== null) {
+            spotifyTrackId = data.spotify.id;
+        }
+
+        if (data.deezer?.id !== undefined && data.deezer.id !== null) {
+            deezerTrackId = data.deezer.id;
+        }
         const moodNameElements = document.querySelectorAll('.mood-name, #mood-name');
         moodNameElements.forEach(el => {
             if (el) {
@@ -68,8 +173,10 @@ async function fetch_best_music(mood, setButtonState) {
         if (data.spotify?.cover_image) {
             topTrackImage.src = data.spotify.cover_image;
             topTrackImage.style.display = 'block';
+            currentCoverImage = data.spotify.cover_image;
         } else {
             topTrackImage.style.display = 'none'; // Hide image if not available
+            currentCoverImage = '';
         }
         
         topTrackImage.alt = `${data.spotify?.name || 'Unknown'} by ${data.spotify?.artist || 'Unknown'}`;
@@ -199,6 +306,12 @@ async function fetch_best_music(mood, setButtonState) {
         hideLoading();
         if (setButtonState) {
             setButtonState(false);
+        }
+
+        if (error.message && error.message.toLowerCase().includes('rate limit')) {
+            getCurrentTranslations().then(translations => {
+                showToast(getNestedTranslation(translations, 'toast.rateLimitExceeded') || 'Too many requests. Please try again later.', 'error', { timeout: 5000 });
+            });
         }
     }
 }
@@ -518,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
             moodInputBox.value = '';
             
         } catch (error) {
-            alert(error.message);
+            showToast(error.message, 'error', { timeout: 5000 });
             setButtonState(false); //reset button state on error
         }
     });
@@ -544,7 +657,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error('Error finding another song:', error);
-            alert('Failed to find another song. Please try again later.');
+            getCurrentTranslations().then(translations => {
+                showToast(getNestedTranslation(translations, 'toast.findAnotherFailed'), 'error', { timeout: 5000 });
+            });
             setFindAnotherButtonState(false);
         }
     });
@@ -552,6 +667,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('close-button').addEventListener('click', function() {
         const resultsContainer = document.getElementById('results-container');
         const resultsOverlay = document.getElementById('results-overlay');
+
+        if (window.location.pathname === '/shared') {
+        window.history.replaceState({}, '', '/');
+        }
+
+        if (resultsContainer) resultsContainer.classList.remove('shared-mode');
         
         // Stop audio playback when closing the popup
         const audioPreview = document.getElementById('audio-preview');
@@ -570,11 +691,18 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove the show class to hide the popup
         resultsContainer.classList.remove('show');
         resultsOverlay.classList.remove('show');
+         document.body.classList.remove('popup-open');
     });
 
     document.getElementById('results-overlay').addEventListener('click', function() {
+        if (resultsContainer) resultsContainer.classList.remove('shared-mode');
         const resultsContainer = document.getElementById('results-container');
         const resultsOverlay = document.getElementById('results-overlay');
+
+        // Reset URL if on shared page
+        if (window.location.pathname === '/shared') {
+            window.history.replaceState({}, '', '/');
+        }
         
         const audioPreview = document.getElementById('audio-preview');
         if (audioPreview) {
@@ -590,6 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         resultsContainer.classList.remove('show');
         resultsOverlay.classList.remove('show');
+         document.body.classList.remove('popup-open');
     });
 
     // Hide search box on scroll
@@ -706,6 +835,285 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Share button functionality
+    document.getElementById('share-result-button').addEventListener('click', function() {
+        console.log('Sharing song:');
+        console.log('Spotify Track ID:', spotifyTrackId);
+        console.log('Deezer Track ID:', deezerTrackId);
+
+        let moodKey = lastProcessedMood;
+        
+
+        if (!spotifyTrackId && !deezerTrackId) {
+            console.warn('No track ID available for sharing');
+            getCurrentTranslations().then(translations => {
+                showToast(getNestedTranslation(translations, 'toast.noSongToShare'), 'error', { timeout: 5000 });
+            });
+            return;
+        }
+        //TODO: Almos done !, maybe fix scroll enable on normal po up shown and immprove a bit shared poup, if lazy just add infos in the infos sections and ship
+
+        //Create a custom url for sharing
+        let shareUrl = '';
+        if (deezerTrackId) {
+            shareUrl = `https://moodfm.pronotif.tech/shared?mood=${encodeURIComponent(moodKey)}&provider=deezer&id=${encodeURIComponent(deezerTrackId)}&cover=${encodeURIComponent(currentCoverImage)}`;
+        } else if (spotifyTrackId) {
+            shareUrl = `https://moodfm.pronotif.tech/shared?mood=${encodeURIComponent(moodKey)}&provider=spotify&id=${encodeURIComponent(spotifyTrackId)}&cover=${encodeURIComponent(currentCoverImage)}`;
+        } else {
+            console.warn('No track ID available for sharing');
+            getCurrentTranslations().then(translations => {
+                showToast(getNestedTranslation(translations, 'toast.noSongToShare'), 'error', { timeout: 5000 });
+            });
+            return;
+        }
+
+        console.log('Share URL:', shareUrl);
+
+        const shareData = {
+            title: 'Check out this song!',
+            text: `I found this song based on my mood thanks to MoodFM: ${document.getElementById('top-track-title').textContent} by ${document.getElementById('top-track-artist').textContent}`,
+            url: shareUrl
+        };
+
+        if (navigator.share && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            navigator.share(shareData)
+            .then(() => console.log('Share successful'))
+            .catch(err => console.error('Error sharing:', err));
+        } else {
+            console.warn('Web Share API not supported in this browser');
+
+            // Fallback: Copy the link to clipboard
+
+            navigator.clipboard.writeText(shareUrl)
+            
+                .then(() => {
+                    console.log('Link copied to clipboard');
+                    getCurrentTranslations().then(translations => {
+                        showToast(getNestedTranslation(translations, 'toast.linkCopied'), 'success');
+                    });
+                })
+                .catch(err => {
+                    console.error('Error copying link:', err);
+                    getCurrentTranslations().then(translations => {
+                        showToast(getNestedTranslation(translations, 'toast.copyFailed'), 'error', { timeout: 5000 });
+                    });
+                });
+        }
+    });
+
+    // Check if path is /shared and show the website
+    if (window.location.pathname === '/shared') {
+        // Remove overlays/popups if present
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) loadingOverlay.classList.remove('show');
+        const resultsOverlay = document.getElementById('results-overlay');
+        if (resultsOverlay) resultsOverlay.classList.remove('show');
+        const resultsContainer = document.getElementById('results-container');
+        if (resultsContainer) resultsContainer.classList.remove('show');
+        document.body.classList.remove('popup-open');
+
+        // Parse provider and id from URL
+        const params = new URLSearchParams(window.location.search);
+        const provider = params.get('provider');
+        const id = params.get('id');
+        const mood = params.get('mood') || 'unknown';
+
+        if (provider && id) {
+            fetch(`/shared-lookup?mood=${encodeURIComponent(mood)}&provider=${encodeURIComponent(provider)}&id=${encodeURIComponent(id)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch shared song');
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Shared song data:', data);
+                    document.body.classList.add('popup-open'); //Block scrolling
+
+                    // Show the results popup
+                    const resultsContainer = document.getElementById('results-container');
+                    if (resultsContainer) {
+                        resultsContainer.classList.add('shared-mode');
+                    }
+
+                    const resultsOverlay = document.getElementById('results-overlay');
+                    resultsContainer.classList.add('show');
+                    resultsOverlay.classList.add('show');
+
+                    const perfectTrackTitle = document.getElementById('perfectTrackTitle');
+                    if (perfectTrackTitle) {
+                        perfectTrackTitle.style.display = 'none'; // Hide the "Perfect Track" title
+                    }
+
+                    // Fill in title, artist, cover
+                    const topTrackTitle = document.getElementById('top-track-title');
+                    const topTrackArtist = document.getElementById('top-track-artist');
+                    const topTrackImage = document.getElementById('top-track-image');
+
+                    topTrackTitle.textContent = data.name || data.title || 'Unknown Title';
+                    topTrackArtist.textContent = data.artist || data.artist || 'Unknown Artist';
+
+                    const existingWrapper = document.querySelector('.track-image-wrapper');
+                    if (existingWrapper) {
+                        const imageParent = existingWrapper.parentNode;
+                        const image = existingWrapper.querySelector('#top-track-image');
+                        if (image && imageParent) {
+                            imageParent.replaceChild(image, existingWrapper);
+                        }
+                    }
+
+                    // Create new wrapper and play button
+                    const imageWrapper = document.createElement('div');
+                    imageWrapper.className = 'track-image-wrapper';
+                    const playButton = document.createElement('div');
+                    playButton.className = 'track-play-button';
+                    playButton.innerHTML = '<i class="fas fa-play"></i>';
+
+                    const imageParent = topTrackImage.parentNode;
+                    imageParent.replaceChild(imageWrapper, topTrackImage);
+                    imageWrapper.appendChild(topTrackImage);
+                    imageWrapper.appendChild(playButton);
+
+                    if (data.cover_image) {
+                        topTrackImage.src = data.cover_image;
+                        topTrackImage.style.display = 'block';
+                    } else {
+                        topTrackImage.style.display = 'none';
+                    }
+                    topTrackImage.alt = `${topTrackTitle.textContent} by ${topTrackArtist.textContent}`;
+
+                    // Get streaming link elements
+                    const spotifyLink = document.getElementById('spotify-link');
+                    const youtubeLink = document.getElementById('youtube-link');
+                    const deezerLink = document.getElementById('deezer-link');
+                    const appleMusicLink = document.getElementById('apple-music-link');
+                    const searchQuery = encodeURIComponent(`${topTrackTitle} ${topTrackArtist}`);
+
+                    // Set streaming links SPOTIFY
+                    if (data.spotify_url) {
+                        spotifyLink.href = data.spotify_url;
+                        spotifyLink.style.display = 'inline-flex';
+                    } else {
+                        spotifyLink.style.display = 'none';
+                    }
+
+                    //YTB MUSIC
+                    if (data.youtube_url) {
+                        youtubeLink.href = data.youtube_url;
+                    } else {
+                        youtubeLink.href = `https://www.youtube.com/results?search_query=${searchQuery}`;
+                    }
+
+                    //DEEZER
+                    if (data.deezer_url) {
+                        deezerLink.href = data.deezer_url;
+                    } else {
+                        deezerLink.href = `https://www.deezer.com/search/${searchQuery}`;
+                    }
+
+                    //APPLE MUSIC
+                    if (data.apple_music_url) {
+                        appleMusicLink.href = data.apple_music_url;
+                    } else {
+                        appleMusicLink.href = `https://music.apple.com/search?term=${searchQuery}`;
+                    }
+
+
+
+
+                    //ide action buttons
+                    const actionButtons = document.querySelector('.action-buttons');
+                    if (actionButtons) {
+                        const tryButton = actionButtons.querySelector('.try-by-yourself-button');
+                        Array.from(actionButtons.children).forEach(child => {
+                            if (child !== tryButton) {
+                                child.style.display = 'none';
+                            } else {
+                                child.style.display = 'block';
+                            }
+                        });
+                    }
+                    const moodConfidence = document.getElementById('mood-confidence');
+                    const sharedHeader = document.getElementById('shared-header');
+                    
+                    if (sharedHeader) sharedHeader.style.display = 'flex'; 
+                        const sharedHeaderSubtitle = document.getElementById('shared-header-subtitle');
+                        if (sharedHeaderSubtitle) {
+                            const sharedHighlight = sharedHeaderSubtitle.querySelector('.shared-highlight');
+                            if (sharedHighlight) {
+                                if (sharedHeaderSubtitle) {
+                                    const sharedHighlight = sharedHeaderSubtitle.querySelector('.shared-highlight');
+                                    if (sharedHighlight) {
+                                        getCurrentTranslations().then(translations => {
+                                            let moodTranslated = getNestedTranslation(translations, `feelings.${data.mood}`) || data.mood;
+                                            let subtitle = getNestedTranslation(translations, 'shared.headerSubtitle') || 'Someone felt <i>{{mood}}</i> and thought of you!';
+                                            subtitle = subtitle.replace('{{mood}}', `<i>${moodTranslated}</i>`);
+                                            sharedHighlight.innerHTML = subtitle;
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                    if (moodConfidence) moodConfidence.style.display = 'none';
+
+                    //Play preview if available
+                    let audioPreview = document.getElementById('audio-preview');
+                    if (!audioPreview) {
+                        audioPreview = document.createElement('audio');
+                        audioPreview.id = 'audio-preview';
+                        document.body.appendChild(audioPreview);
+                    } else {
+                        audioPreview.pause();
+                        audioPreview.currentTime = 0;
+                        audioPreview.src = '';
+                        audioPreview.load();
+                    }
+
+                    if (data.preview) {
+                        audioPreview.src = data.preview;
+                        audioPreview.load();
+                        playButton.style.display = 'flex';
+
+                        let isPlaying = false;
+                        playButton.onclick = (e) => {
+                            e.stopPropagation();
+                            if (isPlaying) {
+                                audioPreview.pause();
+                                playButton.innerHTML = '<i class="fas fa-play"></i>';
+                                isPlaying = false;
+                            } else {
+                                audioPreview.load();
+                                audioPreview.play().then(() => {
+                                    playButton.innerHTML = '<i class="fas fa-pause"></i>';
+                                    isPlaying = true;
+                                }).catch(err => {
+                                    playButton.innerHTML = '<i class="fas fa-play"></i>';
+                                    isPlaying = false;
+                                });
+                            }
+                        };
+                        audioPreview.addEventListener('ended', () => {
+                            isPlaying = false;
+                            playButton.innerHTML = '<i class="fas fa-play"></i>';
+                        });
+                    } else {
+                        playButton.style.display = 'none';
+                    }
+
+                })
+                .catch(error => {
+                    console.error('Error loading shared song:', error);
+                    getCurrentTranslations().then(translations => {
+                        showToast(getNestedTranslation(translations, 'toast.sharedSongLoadFailed'), 'error', { timeout: 5000 });
+                    });
+                });
+        } else {
+            console.log('No provider or id found in shared URL');
+            getCurrentTranslations().then(translations => {
+                showToast(getNestedTranslation(translations, 'toast.sharedSongLoadFailed'), 'error', { timeout: 5000 });
+            });
+        }
+    }
+
 });
 
 // Loading animation control functions
@@ -742,3 +1150,16 @@ function hideLoading() {
         document.body.classList.remove('popup-open');
     }
 }
+
+document.getElementById('try-by-yourself-button').addEventListener('click', function() {
+
+    if (window.location.pathname === '/shared') { // Reset URL to home
+        window.history.replaceState({}, '', '/');
+    }
+    // Hide results popup
+    document.getElementById('results-container').classList.remove('show');
+    document.getElementById('results-overlay').classList.remove('show');
+    document.body.classList.remove('popup-open');
+    // Scroll to input
+    document.getElementById('mood_input_box').focus();
+});

@@ -41,7 +41,40 @@ def search_track_on_spotify(track_name, artist_name):
                 "artist": track["artists"][0]["name"],
                 "url": track["external_urls"]["spotify"],
                 "album": track["album"]["name"],
-                "cover_image": track["album"]["images"][0]["url"] if track["album"]["images"] else None 
+                "cover_image": track["album"]["images"][0]["url"] if track["album"]["images"] else None
             }
     
     return None  # No track found
+
+def get_spotify_track_by_id(track_id):
+    """
+    Get track details from Spotify by track ID
+    """
+    try:
+        token = get_spotify_token()
+        if not token:
+            raise Exception("Failed to retrieve Spotify token")
+            
+        response = requests.get(
+            f"https://api.spotify.com/v1/tracks/{track_id}",
+            headers={
+                "Authorization": f"Bearer {token}"
+            }
+        )
+        
+        if response.status_code != 200:
+            return None
+            
+        track = response.json()
+        
+        return {
+            "id": track["id"],
+            "name": track["name"],
+            "artist": track["artists"][0]["name"],
+            "url": track["external_urls"]["spotify"],
+            "album": track["album"]["name"],
+            "cover_image": track["album"]["images"][0]["url"] if track["album"]["images"] else None
+        }
+    except Exception as e:
+        print(f"Error fetching Spotify track by ID: {e}")
+        return None

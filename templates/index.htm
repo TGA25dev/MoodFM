@@ -13,6 +13,7 @@
         <meta name="author" content="TGA25dev">
 
     </head>
+    <div id="toaster-container"></div>
     <body>
         <div>
             <div id="header">
@@ -63,10 +64,17 @@
 
         <div class="results-overlay" id="results-overlay"></div>
         <div id="results-container" class="results-container">
-            <button class="close-button" id="close-button">x</button>
+
+            <div class="shared-header" id="shared-header">
+                <p data-i18n="sharedHeaderSubtitle" class="shared-header-subtitle" id="shared-header-subtitle">
+                    <span class="shared-highlight">Someone felt <i>happy</i> and thought of you !</span>
+                </p>
+            </div>
+
+            <button class="close-button" id="close-button">✖ </button>
             <p data-i18n="results.confidence" id="mood-confidence" class="mood-confidence">We think you're feeling <span id="mood-name">happy</span> (<span id="mood-score">0%</span> confidence).</p>
 
-            <h2 data-i18n="results.perfectTrack">Your Perfect Track</h2>
+            <h2 data-i18n="results.perfectTrack" id="perfectTrackTitle">Your Perfect Track</h2>
             <div id="top-track-info">
 
                 <img id="top-track-image" src="" alt="Album Cover">
@@ -81,7 +89,9 @@
                         <span class="icon"><i class="fab fa-apple"></i></span> Apple Music
                     </a>
                     <a id="deezer-link" class="streaming-button deezer" href="#" target="_blank">
-                        <span class="icon"><i class="fab fa-deezer"></i></span> Deezer
+                        <span class="icon">
+                            <img src="https://drive.pronotif.tech/raw/YzAw1j.svg" alt="Deezer" style="height:1em;vertical-align:middle;">
+                        </span> Deezer
                     </a>
                     <a id="youtube-link" class="streaming-button youtube" href="#" target="_blank">
                         <span class="icon"><i class="fab fa-youtube"></i></span> YouTube Music
@@ -90,6 +100,8 @@
             </div>
             <div class="action-buttons">
                 <button data-i18n="results.findAnotherButton" class="find-another-button" id="find-another-button">Find Another Song</button>
+                <button data-i18n="results.shareResultButton" id="share-result-button" class="share-result-button"><i class="fas fa-share-alt"></i>Share The Mood</button>
+                <button data-i18n="results.tryByYourselfButton" id="try-by-yourself-button" class="try-by-yourself-button">Find Your Own Soundtrack</button>
             </div>
         </div>
 

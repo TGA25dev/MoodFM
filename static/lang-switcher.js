@@ -84,6 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                         element.innerHTML = formattedText;
                     }
+                } else if (element.id === 'share-result-button') {
+                    // Special handling for share button to preserve the icon
+                    const icon = element.querySelector('i');
+                    element.innerHTML = '';
+                    if (icon) element.appendChild(icon);
+                    element.appendChild(document.createTextNode(translation));
                 } else {
                     element.textContent = translation;
                 }
@@ -133,4 +139,32 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Expose getNestedTranslation function globally
     window.getNestedTranslation = getNestedTranslation;
+
+    function updatePageTranslations(lang) {
+        fetch(`/static/langs/${lang}.json`)
+            .then(response => response.json())
+            .then(translations => {
+                document.querySelectorAll('[data-i18n]').forEach(element => {
+                    const key = element.getAttribute('data-i18n');
+                    const translation = getNestedTranslation(translations, key);
+                    
+                    // Special handling for share button to preserve the icon
+                    if (element.id === 'share-result-button' && translation) {
+                        // Keep the icon, only update the text
+                        const icon = element.querySelector('i');
+                        element.innerHTML = '';
+                        if (icon) element.appendChild(icon);
+                        element.appendChild(document.createTextNode(translation));
+                    } else if (translation) {
+                        element.textContent = translation;
+                    }
+                });
+                
+                // Trigger languageChanged event for other components
+                document.dispatchEvent(new CustomEvent('languageChanged', {
+                    detail: { language: lang, translations: translations }
+                }));
+            })
+            .catch(err => console.error('Error loading translations:', err));
+    }
 });
