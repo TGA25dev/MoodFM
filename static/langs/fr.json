@@ -33,12 +33,12 @@
 
     "about": {
         "title": "À propos de MoodFM",
-        "content": "Lorem"
+        "content": "MoodFM est un application musicale propulsée par l’IA qui transforme vos émotions en recommendation musicale. Il suffit de taper comment vous vous sentez (dans n’importe quelle langue), MoodFM analyse votre humeur grâce au traitement du langage naturel et trouve un morceau qui correspond à votre état émotionnel.<br><br>Ce projet a été réalisé en moins de deux semaines pour le <a target=\"_blank\" href=\"https://summer.hackclub.com\">Summer of Making</a> 2025, entièrement auto-hébergé. MoodFM respecte votre vie privée — pas de compte, pas de suivi, juste de la musique et votre mood."
     },
-
+    
     "howItWorks": {
         "title": "Comment ça marche",
-        "content": "Lorem"
+        "content": "Tapez comment vous vous sentez et MoodFM traduit votre texte grâce à l’API Google Translate, l’analyse avec l’IA (modèles Huggingface), l’associe à des tags musicaux présélectionnés, récupère des morceaux sur Last.fm et les principales plateformes de streaming, et vous permet de partager votre chanson avec un lien unique — le tout propulsé par un backend Flask respectueux de la vie privée et un frontend JS Vanilla."
     },
 
     "footer": {

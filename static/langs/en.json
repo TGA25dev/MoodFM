@@ -33,12 +33,12 @@
 
   "about": {
     "title": "About MoodFM",
-    "content": "Lorem ipsum dolor, sit amet consectetur adipisicing elit. Illum suscipit itaque quo excepturi laudantium quod, perferendis odit nam consequuntur cumque molestiae est, amet pariatur cupiditate! Laudantium voluptates assumenda reprehenderit architecto! Lorem ipsum dolor sit amet consectetur adipisicing elit. Nulla, inventore, non blanditiis, nostrum laborum provident minima veritatis beatae aut corrupti sapiente eum iusto a quis? Quas recusandae eveniet qui vel?"
+    "content": "MoodFM is an AI-powered music recommender that transforms your emotions into the perfect song. Just type how you feel (in any language), and MoodFM analyzes your mood using natural language processing and finds a song that matches your emotional state.<br><br>It was built in under two weeks for the <a target=\"_blank\" href=\"https://summer.hackclub.com\">Summer of Making </a> 2025, entirely self-hosted at home. MoodFM is stateless, privacy-respecting — no login, no tracking, just music and emotion."
   },
 
   "how-it-works": {
     "title": "How it Works",
-    "content": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Deleniti, quidem incidunt impedit nihil quisquam quas, sapiente officiis rem sed expedita a ratione? Quod doloremque assumenda vitae perferendis modi illo maiores."
+    "content": "Enter how you feel and MoodFM translates your mood using Google Translate API, analyzes it with AI (Huggingface models), matches it to curated music tags, fetches tracks from Last.fm and major platforms, and lets you share your personalized song with a unique link—all powered by a privacy-friendly Flask backend and a Vanila JS frontend."
   },
 
   "footer": {

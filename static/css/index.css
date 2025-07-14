@@ -642,6 +642,17 @@ body.popup-open {
   font-variation-settings: "wght" 400;
 }
 
+.section a {
+    color: #f107a3;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+
+.section a:hover {
+    color: #7b2ff7;
+    text-decoration: underline;
+}
+
 .go-up-link {
   position: fixed; 
   bottom: 40px;

@@ -90,6 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     element.innerHTML = '';
                     if (icon) element.appendChild(icon);
                     element.appendChild(document.createTextNode(translation));
+                } else if (key === 'about.content') { //Allow HTML in about content
+                    element.innerHTML = translation;
                 } else {
                     element.textContent = translation;
                 }
