@@ -83,6 +83,8 @@
     "copyFailed": "Impossible de copier le lien. Veuillez le copier manuellement.",
     "sharedSongLoadFailed": "Impossible de charger la chanson partagée.",
     "findAnotherFailed": "Impossible de trouver une autre chanson. Veuillez réessayer plus tard.",
-    "rateLimitExceeded": "Trop de requêtes effectuées. Veuillez réessayer plus tard."
+    "rateLimitExceeded": "Trop de requêtes effectuées. Veuillez réessayer plus tard.",
+    "moderationFailed": "Pas de ça ici. Merci de reformuler votre message.",
+    "tempBan": "Trop de messages non autorisés. Vous avez été banni pour 10 minutes."
     }
 }

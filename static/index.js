@@ -339,6 +339,31 @@ async function submitMood(moodInput, setButtonState) {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            // Moderation or temp ban error handling
+            if (
+                errorData &&
+                errorData.error &&
+                (
+                    errorData.error.toLowerCase().includes('harmful') ||
+                    errorData.error.toLowerCase().includes('moderation') ||
+                    errorData.error.toLowerCase().includes('rephrase') ||
+                    errorData.error.toLowerCase().includes('temporarily banned')
+                )
+            ) {
+                getCurrentTranslations().then(translations => {
+                    let msg;
+                    if (errorData.error.toLowerCase().includes('temporarily banned')) {
+                        msg = getNestedTranslation(translations, 'toast.tempBan') ||
+                              "Too many flagged messages. You're banned for 10 minutes.";
+                    } else {
+                        msg = getNestedTranslation(translations, 'toast.moderationFailed') ||
+                              'Only good vibes are allowed here. Please rephrase your input.';
+                    }
+                    showToast(msg, 'error', { timeout: 5000 });
+                });
+                setButtonState(false);
+                return;
+            }
             throw new Error(errorData.error || `Server error: ${response.status}`);
         }
 

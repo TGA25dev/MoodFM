@@ -11,6 +11,7 @@ from flask_session import Session
 from redis import Redis
 import bleach
 from datetime import datetime
+from functools import wraps
 
 from modules.translation.translator import translate_text, detect_languages
 
@@ -23,6 +24,7 @@ from modules.music.deezer_data import search_track_on_deezer, get_deezer_track_b
 from modules.music.apple_music_data import search_track_on_apple_music
 
 from modules.ratelimit.ratelimiter import limiter
+from modules.moderation.moderation_engine import check_input_safety
 
 
 load_dotenv()
@@ -32,7 +34,8 @@ app = Flask(__name__)
 redis_connection = redis.Redis(
     host=os.getenv('REDIS_HOST'),
     port=int(os.getenv('REDIS_PORT')),
-    db=int(os.getenv('REDIS_DB'))
+    db=int(os.getenv('REDIS_DB')),
+    password=os.getenv('REDIS_PASSWORD')
 )
 
 initialized = False
@@ -78,7 +81,8 @@ app.config['SESSION_KEY_PREFIX'] = 'session:'
 app.config['SESSION_REDIS'] = Redis(
     host=os.getenv('REDIS_HOST'),
     port=int(os.getenv('REDIS_PORT')),
-    db=int(os.getenv('REDIS_DB'))
+    db=int(os.getenv('REDIS_DB')),
+    password=os.getenv('REDIS_PASSWORD')
 )
 
 Session(app)
@@ -121,6 +125,15 @@ def page_not_found(error):
     #otherwise it returns JSON
     return jsonify({'error': 'Page not found'}), 404
 
+def check_temp_ban(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        ip = request.remote_addr
+        if redis_connection.get(f"banned:{ip}"):
+            return jsonify({"error": "You are temporarily banned due to repeated harmful input. Please try again later."}), 429
+        return func(*args, **kwargs)
+    return wrapper
+
 #Basic Root
 @app.route('/', methods=['GET'])
 @limiter.limit("50 per minute")
@@ -134,6 +147,7 @@ def index():
 # API Endpoints
 
 @app.route('/mood', methods=['POST'])
+@check_temp_ban
 @limiter.limit(os.getenv("MOOD_ENDPOINT_LIMIT", "10") + " per minute")
 async def mood_endpoint():
     """
@@ -174,6 +188,26 @@ async def mood_endpoint():
         except Exception as e:
             logger.error(f"Translation error: {e}")
             return jsonify({"error": "Translation service is temporarily unavailable. Please try again later."}), 503
+        
+    
+    # MODERATION CHECK
+    is_safe = check_input_safety(text)
+    if not is_safe:
+        logger.warning(f"Unsafe input detected: {text}")
+        ip = request.remote_addr
+        # Increment harmful count
+        key = f"harmful_count:{ip}"
+        count = redis_connection.incr(key)
+        if count == 1:
+            # Set expiry for the first offense
+            redis_connection.expire(key, 3600)
+        if count >= 3:
+            # Ban IP for 10 minutes
+            redis_connection.setex(f"banned:{ip}", 600, "1")
+            redis_connection.delete(key)  # Reset counter after ban
+            return jsonify({"error": "Input text contains harmful content, you are temporarily banned due to repeated harmful input."}), 400
+        else:
+            return jsonify({"error": "Input text contains harmful content, please rephrase"}), 400
     
     mood_analysis = get_mood(text)
     if not mood_analysis or mood_analysis[0] is None:
@@ -194,6 +228,7 @@ async def mood_endpoint():
         }), 200
 
 @app.route('/music', methods=['POST'])
+@check_temp_ban
 @limiter.limit(os.getenv("MUSIC_ENDPOINT_LIMIT", "10") + " per minute")
 def music_endpoint():
     """
@@ -250,6 +285,7 @@ def music_endpoint():
     return jsonify(results), 200
 
 @app.route('/shared', methods=['GET'])
+@check_temp_ban
 @limiter.limit(os.getenv("MUSIC_ENDPOINT_LIMIT", "10") + " per minute")
 def shared_page():
     """
@@ -259,6 +295,7 @@ def shared_page():
     return render_template('index.htm', cache_buster=cache_buster)
 
 @app.route('/shared-lookup', methods=['GET'])
+@check_temp_ban
 @limiter.limit(os.getenv("MUSIC_ENDPOINT_LIMIT", "10") + " per minute")
 def shared_song_endpoint():
     """
@@ -377,6 +414,7 @@ def shared_song_endpoint():
         return jsonify({"error": "Failed to retrieve track information"}), 500
 
 @app.route('/ping', methods=['GET'])
+@check_temp_ban
 @limiter.limit(os.getenv("PING_ENDPOINT_LIMIT", "10") + " per minute")
 def test_endpoint():
     """Ping endpoint to test server availability"""

@@ -88,6 +88,8 @@
     "copyFailed": "Failed to copy link. Please copy it manually.",
     "sharedSongLoadFailed": "Could not load shared song.",
     "findAnotherFailed": "Failed to find another song. Please try again later.",
-    "rateLimitExceeded": "Too many requests. Please try again in a moment."
+    "rateLimitExceeded": "Too many requests. Please try again in a moment.",
+    "moderationFailed": "Only good vibes are allowed here. Please rephrase your input.",
+    "tempBan": "Too many flagged messages. You're banned for 10 minutes."
   }
 }

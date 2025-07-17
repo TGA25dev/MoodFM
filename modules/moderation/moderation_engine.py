@@ -26,5 +26,6 @@ def check_input_safety(text, threshold=0.5):
         res["label"].lower() != "non-toxic" and res["score"] > threshold
         for res in toxicity_result
     )
+    text_is_safe = not hate_harmful and not tox_harmful
 
-    return hate_harmful, tox_harmful
+    return text_is_safe
