@@ -13,16 +13,20 @@ import bleach
 from datetime import datetime
 from functools import wraps
 
+#Tranlation
 from modules.translation.translator import translate_text, detect_languages
 
+# Mood engine
 from modules.mood.mood_engine import get_mood
 from modules.music.last_fm_data import get_top_track_for_mood
 
+# Music providers
 from modules.music.spotify_data import search_track_on_spotify, get_spotify_track_by_id
 from modules.music.ytb_music_data import search_track_on_ytb
 from modules.music.deezer_data import search_track_on_deezer, get_deezer_track_by_id
 from modules.music.apple_music_data import search_track_on_apple_music
 
+# Rate limiting and moderation
 from modules.ratelimit.ratelimiter import limiter
 from modules.moderation.moderation_engine import check_input_safety
 
@@ -56,6 +60,9 @@ cors_origins = [origin.strip() for origin in os.getenv('CORS_ORIGINS', '').split
 cors_methods = [method.strip() for method in os.getenv('CORS_METHODS', '').split(',')]
 cors_headers = [header.strip() for header in os.getenv('CORS_HEADERS', '').split(',')]
 cors_credentials = os.getenv('CORS_CREDENTIALS', 'False')
+
+if not cors_origins or not cors_methods or not cors_headers:
+    raise RuntimeError("CORS_ORIGINS, CORS_METHODS, and CORS_HEADERS environment variables must be set.")
 
 CORS(app, 
      resources={r"/*": {
@@ -100,6 +107,7 @@ logger.addHandler(file_handler)
 app.secret_key = os.getenv('FLASK_KEY')
 app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
 app.config['SESSION_COOKIE_SECURE'] = True  #HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 
 @app.errorhandler(500)
@@ -107,13 +115,12 @@ def internal_error(error):
     logger.critical(f"Internal Server Error: {error}")
     return jsonify({'error': 'An internal error occurred'}), 500
 
-
 @app.errorhandler(429)
 def ratelimit_error(error):    
     logger.warning(f"Rate limit exceeded: {error}")
 
     return jsonify({
-        'error': 'Rate limit exceeded'
+        'error': 'Rate limit exceeded, please try again later.',
     }), 429
 
 

@@ -91,5 +91,10 @@
     "rateLimitExceeded": "Too many requests. Please try again in a moment.",
     "moderationFailed": "Only good vibes are allowed here. Please rephrase your input.",
     "tempBan": "Too many flagged messages. You're banned for 10 minutes."
-  }
+  },
+
+ "share": {
+   "title": "Check out this song !",
+   "text": "I found this song based on my mood thanks to MoodFM: {{title}} by {{artist}}"
+ }
 }

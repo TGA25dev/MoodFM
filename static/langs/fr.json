@@ -86,5 +86,11 @@
     "rateLimitExceeded": "Trop de requêtes effectuées. Veuillez réessayer plus tard.",
     "moderationFailed": "Pas de ça ici. Merci de reformuler votre message.",
     "tempBan": "Trop de messages non autorisés. Vous avez été banni pour 10 minutes."
-    }
+    },
+
+ "share": {
+    "title": "Jete un coup d'oeil à cette chanson !",
+    "text": "J'ai trouvé ce morceau adapté à mon humeur grâce à MoodFM : {{title}} par {{artist}}"
+
+  }
 }

@@ -5,6 +5,24 @@ let currentCoverImage = '';
 // Global translation cache
 let currentTranslations = null;
 
+// Escape HTML to prevent XSS
+function escapeHTML(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+//Url validation
+function isSafeUrl(url) {
+    try {
+        const u = new URL(url, window.location.origin);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch { return false; }
+}
+
 // Returns a promise that resolves to the current translations object
 function getCurrentTranslations() {
     const currentLang = localStorage.getItem('moodFmLang') ||
@@ -38,9 +56,10 @@ function showToast(message, type = 'info', options = {}) {
     toast.className = `toaster ${type}`;
     toast.innerHTML = `
         ${icons[type] || icons.info}
-        <span>${message}</span>
+        <span></span>
         <button class="toaster-close" aria-label="Close">&times;</button>
     `;
+    toast.querySelector('span').textContent = message;
 
     // Remove on click
     toast.querySelector('.toaster-close').onclick = () => removeToast(toast);
@@ -267,7 +286,7 @@ async function fetch_best_music(mood, setButtonState) {
         }
         
         // Set streaming links
-        if (data.spotify?.url) {
+        if (data.spotify?.url && isSafeUrl(data.spotify.url)) {
             spotifyLink.href = data.spotify.url;
             spotifyLink.style.display = 'inline-flex';
         } else {
@@ -278,19 +297,19 @@ async function fetch_best_music(mood, setButtonState) {
         const artistName = data.spotify?.artist || '';
         const searchQuery = encodeURIComponent(`${trackName} ${artistName}`);
         
-        if (data.ytb_music?.url) {
+        if (data.ytb_music?.url && isSafeUrl(data.ytb_music.url)) {
             youtubeLink.href = data.ytb_music.url;
         } else {
             youtubeLink.href = `https://www.youtube.com/results?search_query=${searchQuery}`;
         }
         
-        if (data.deezer?.url) {
+        if (data.deezer?.url && isSafeUrl(data.deezer.url)) {
             deezerLink.href = data.deezer.url;
         } else {
             deezerLink.href = `https://www.deezer.com/search/${searchQuery}`;
         }
 
-        if (data.apple_music?.url) {
+        if (data.apple_music?.url && isSafeUrl(data.apple_music.url)) {
             appleMusicLink.href = data.apple_music.url;
         } else {
             appleMusicLink.href = `https://music.apple.com/search?term=${searchQuery}`;
@@ -894,37 +913,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log('Share URL:', shareUrl);
 
-        const shareData = {
-            title: 'Check out this song!',
-            text: `I found this song based on my mood thanks to MoodFM: ${document.getElementById('top-track-title').textContent} by ${document.getElementById('top-track-artist').textContent}`,
-            url: shareUrl
-        };
+        getCurrentTranslations().then(translations => {
+            const shareTitle = getNestedTranslation(translations, 'share.title') || 'Check out this song!';
+            let shareText = getNestedTranslation(translations, 'share.text') ||
+                `I found this song based on my mood thanks to MoodFM: ${document.getElementById('top-track-title').textContent} by ${document.getElementById('top-track-artist').textContent}`;
 
-        if (navigator.share && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            // Replace placeholders if present
+            const songTitle = document.getElementById('top-track-title').textContent;
+            const songArtist = document.getElementById('top-track-artist').textContent;
+            shareText = shareText.replace('{{title}}', songTitle).replace('{{artist}}', songArtist);
+
+            const shareData = {
+                title: shareTitle,
+                text: shareText,
+                url: shareUrl
+            };
+
+            if (navigator.share && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             navigator.share(shareData)
-            .then(() => console.log('Share successful'))
-            .catch(err => console.error('Error sharing:', err));
-        } else {
+                .then(() => console.log('Share successful'))
+                .catch(err => console.error('Error sharing:', err));
+            } else {
             console.warn('Web Share API not supported in this browser');
-
             // Fallback: Copy the link to clipboard
-
             navigator.clipboard.writeText(shareUrl)
-            
                 .then(() => {
-                    console.log('Link copied to clipboard');
-                    getCurrentTranslations().then(translations => {
-                        showToast(getNestedTranslation(translations, 'toast.linkCopied'), 'success');
-                    });
+                console.log('Link copied to clipboard');
+                showToast(getNestedTranslation(translations, 'toast.linkCopied'), 'success');
                 })
                 .catch(err => {
-                    console.error('Error copying link:', err);
-                    getCurrentTranslations().then(translations => {
-                        showToast(getNestedTranslation(translations, 'toast.copyFailed'), 'error', { timeout: 5000 });
-                    });
+                console.error('Error copying link:', err);
+                showToast(getNestedTranslation(translations, 'toast.copyFailed'), 'error', { timeout: 5000 });
                 });
-        }
-    });
+            }
+        });
+});
 
     // Check if path is /shared and show the website
     if (window.location.pathname === '/shared') {
@@ -1013,7 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const searchQuery = encodeURIComponent(`${topTrackTitle} ${topTrackArtist}`);
 
                     // Set streaming links SPOTIFY
-                    if (data.spotify_url) {
+                    if (data.spotify_url && isSafeUrl(data.spotify_url)) {
                         spotifyLink.href = data.spotify_url;
                         spotifyLink.style.display = 'inline-flex';
                     } else {
@@ -1021,21 +1044,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     //YTB MUSIC
-                    if (data.youtube_url) {
+                    if (data.youtube_url && isSafeUrl(data.youtube_url)) {
                         youtubeLink.href = data.youtube_url;
                     } else {
                         youtubeLink.href = `https://www.youtube.com/results?search_query=${searchQuery}`;
                     }
 
                     //DEEZER
-                    if (data.deezer_url) {
+                    if (data.deezer_url && isSafeUrl(data.deezer_url)) {
                         deezerLink.href = data.deezer_url;
                     } else {
                         deezerLink.href = `https://www.deezer.com/search/${searchQuery}`;
                     }
 
                     //APPLE MUSIC
-                    if (data.apple_music_url) {
+                    if (data.apple_music_url && isSafeUrl(data.apple_music_url)) {
                         appleMusicLink.href = data.apple_music_url;
                     } else {
                         appleMusicLink.href = `https://music.apple.com/search?term=${searchQuery}`;
@@ -1070,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                         getCurrentTranslations().then(translations => {
                                             let moodTranslated = getNestedTranslation(translations, `feelings.${data.mood}`) || data.mood;
                                             let subtitle = getNestedTranslation(translations, 'shared.headerSubtitle') || 'Someone felt <i>{{mood}}</i> and thought of you!';
-                                            subtitle = subtitle.replace('{{mood}}', `<i>${moodTranslated}</i>`);
+                                            subtitle = subtitle.replace('{{mood}}', `<i>${escapeHTML(moodTranslated)}</i>`);
                                             sharedHighlight.innerHTML = subtitle;
                                         });
                                     }
