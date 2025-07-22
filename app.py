@@ -326,7 +326,17 @@ def shared_song_endpoint():
     
 
     # Normalize mood input
-    mood = mood.lower()
+    mood_map = {
+        "anger": "angry",
+        "disgust": "disgusted",
+        "fear": "scared",
+        "joy": "joy",
+        "sadness": "sad",
+        "sad": "sad",
+        "surprise": "surprised",
+        "surprised": "surprised"
+    }
+    mood = mood_map.get(mood.lower(), mood.lower())
     if mood not in ['angry', "disgusted", "scared", "joy", "sad", "surprised"]:
         return jsonify({"error": "Unsupported mood"}), 400
     
