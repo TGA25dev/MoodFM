@@ -12,6 +12,7 @@ from redis import Redis
 import bleach
 from datetime import datetime
 from functools import wraps
+import threading
 
 #Tranlation
 from modules.translation.translator import translate_text, detect_languages
@@ -29,6 +30,10 @@ from modules.music.apple_music_data import search_track_on_apple_music
 # Rate limiting and moderation
 from modules.ratelimit.ratelimiter import limiter
 from modules.moderation.moderation_engine import check_input_safety
+
+# Statistics tracking
+from modules.statistics.stats import write_stats, read_stats, cleanup_expired_stats, monitor_pool
+from modules.statistics.tracking import get_stats
 
 
 load_dotenv()
@@ -228,6 +233,20 @@ async def mood_endpoint():
 
     if dominant_mood is None or mood_score is None or dominant_mood == "neutral":
         return jsonify({"error": "Mood analysis returned no dominant mood"}), 400
+    
+    ip = request.remote_addr
+    try:
+        get_stats(ip, text, dominant_mood)  # Log the request for statistics
+
+    except Exception as e:
+        logger.error(f"Error retrieving statistics for IP {ip}: {e}")
+
+    try:
+        write_stats(dominant_mood)  # Write mood stats
+        
+    except Exception as e:
+        logger.error(f"Error writing stats: {e}")
+        return jsonify({"error": "Failed to write mood statistics"}), 500
 
     return jsonify({
         "dominant_mood": dominant_mood,
@@ -439,6 +458,15 @@ def test_endpoint():
     logger.info(f"{client_ip} Pong !")
     return jsonify({"message": "Pong !"}), 200
 
+def start_background_tasks():
+    expired_stats_cleanup_thread = threading.Thread(target=cleanup_expired_stats, daemon=True)
+    pool_monitor_thread = threading.Thread(target=monitor_pool, daemon=True)
+    
+    expired_stats_cleanup_thread.start()
+    pool_monitor_thread.start()
+
+
 if __name__ == '__main__':    
     # Start the Flask app
+    start_background_tasks()
     app.run(host=os.getenv('HOST'), port=os.getenv('MAIN_PORT'))
