@@ -29,7 +29,9 @@ file_handler.setLevel(logging.DEBUG)
 file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 file_handler.setFormatter(file_formatter)
 logger.addHandler(file_handler)
-table_name = os.getenv('DB_STATS_TABLE_NAME')
+
+mood_stats_table = os.getenv('DB_MOOD_STATS_TABLE_NAME')
+main_stats_table = os.getenv('DB_MAIN_STATS_TABLE_NAME')
 
 # Context manager for database connections
 @contextmanager
@@ -88,14 +90,78 @@ def get_db_connection():
                     logger.error(f"Error closing connection: {e}")
 
 
-def write_stats(dominant_mood):
-    timestamp = datetime.now()
-    logger.info(f"Writing stats: {dominant_mood} at {timestamp}")
+def increment_visits_count():
     try:
         with get_db_connection() as connection:
             cursor = connection.cursor(dictionary=True)
             cursor.execute(
-                f"INSERT INTO {table_name} (mood, timestamp) VALUES (%s, %s)",
+                f"UPDATE {main_stats_table} SET visits_count = visits_count + 1 WHERE id = 1"
+            )
+            connection.commit()
+            logger.debug("Visits count incremented successfully")
+    except mysql.connector.Error as err:
+        logger.error(f"Error incrementing visits count: {err}")
+        try:
+            connection.rollback()
+        except Exception:
+            pass
+
+def increment_unique_users_count():
+    try:
+        with get_db_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                f"UPDATE {main_stats_table} SET unique_users_count = unique_users_count + 1 WHERE id = 1"
+            )
+            connection.commit()
+            logger.debug("Unique users count incremented successfully")
+    except mysql.connector.Error as err:
+        logger.error(f"Error incrementing unique users count: {err}")
+        try:
+            connection.rollback()
+        except Exception:
+            pass
+
+def increment_shared_songs_count():
+    try:
+        with get_db_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                f"UPDATE {main_stats_table} SET shared_songs_count = shared_songs_count + 1 WHERE id = 1"
+            )
+            connection.commit()
+            logger.debug("Shared songs count incremented successfully")
+    except mysql.connector.Error as err:
+        logger.error(f"Error incrementing shared songs count: {err}")
+        try:
+            connection.rollback()
+        except Exception:
+            pass
+
+def increment_submited_moods_count():
+    try:
+        with get_db_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                f"UPDATE {main_stats_table} SET submited_moods_count = submited_moods_count + 1 WHERE id = 1"
+            )
+            connection.commit()
+            logger.debug("Submited moods count incremented successfully")
+    except mysql.connector.Error as err:
+        logger.error(f"Error incrementing submited moods count: {err}")
+        try:
+            connection.rollback()
+        except Exception:
+            pass
+
+def write_stats(dominant_mood):
+    timestamp = datetime.now()
+    logger.debug(f"Writing stats: {dominant_mood} at {timestamp}")
+    try:
+        with get_db_connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            cursor.execute(
+                f"INSERT INTO {mood_stats_table} (mood, timestamp) VALUES (%s, %s)",
                 (dominant_mood, timestamp)
             )
             connection.commit()
@@ -112,28 +178,55 @@ def read_stats():
     try:
         with get_db_connection() as connection:
             cursor = connection.cursor(dictionary=True)
+            # Get mood stats
             cursor.execute(
                 f"""
-                SELECT mood, COUNT(*) as mood_count, MAX(timestamp) as last_updated
-                FROM {table_name}
+                SELECT mood, COUNT(*) as mood_count
+                FROM {mood_stats_table}
                 GROUP BY mood
-                ORDER BY mood_count DESC, last_updated DESC
                 """
             )
             results = cursor.fetchall()
-            leaderboard = []
+            if not results:
+                # No stats found
+                return {
+                    "message": "No statistics available yet. Please check back later."
+                }
+            stats = {}
             for row in results:
-                leaderboard.append({
-                    "mood": row["mood"],
-                    "mood_count": row["mood_count"],
-                    "last_updated": row["last_updated"]
-                })
-            return leaderboard
-        
+                stats[row["mood"]] = {
+                    "count": row["mood_count"]
+                }
+            # Get the latest timestamp overall
+            cursor.execute(
+                f"SELECT MAX(timestamp) as last_updated FROM {mood_stats_table}"
+            )
+            last_updated = cursor.fetchone()["last_updated"]
+
+            # Get visits and unique users counters
+            cursor.execute(
+                f"""SELECT visits_count, unique_users_count, shared_songs_count, submited_moods_count
+                    FROM {main_stats_table} LIMIT 1"""
+            )
+            main_stats = cursor.fetchone()
+            visits_count = main_stats["visits_count"] if main_stats and "visits_count" in main_stats else 0
+            unique_users_count = main_stats["unique_users_count"] if main_stats and "unique_users_count" in main_stats else 0
+            shared_songs_count = main_stats["shared_songs_count"] if main_stats and "shared_songs_count" in main_stats else 0
+            submited_moods_count = main_stats["submited_moods_count"] if main_stats and "submited_moods_count" in main_stats else 0
+
+            return {
+                "stats": stats,
+                "last_updated": last_updated,
+                "visits_count": visits_count,
+                "unique_users_count": unique_users_count,
+                "submited_moods_count": submited_moods_count,
+                "shared_songs_count": shared_songs_count
+            }
+
     except mysql.connector.Error as err:
         logger.error(f"Error reading stats: {err}")
-        return []
-    
+        return {"stats": {}, "last_updated": None, "visits_count": 0, "unique_users_count": 0}
+
 def cleanup_expired_stats():
     while True:
         #logger.debug("Running expired stats cleanup task")
@@ -143,7 +236,7 @@ def cleanup_expired_stats():
 
                 # Delete records older than today
                 delete_query = f"""
-                    DELETE FROM {table_name}
+                    DELETE FROM {mood_stats_table}
                     WHERE DATE(timestamp) != CURDATE()
                 """
                 cursor.execute(delete_query)
@@ -196,8 +289,4 @@ def reset_connection_pool():
         logger.info("Connection pool successfully reset")
 
     except Exception as e:
-        logger.critical(f"Failed to reset connection pool: {e}")     
-
-
-
-    
+        logger.critical(f"Failed to reset connection pool: {e}")

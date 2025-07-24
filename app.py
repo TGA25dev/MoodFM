@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 import logging
 from datetime import timedelta
 import redis
@@ -32,7 +32,7 @@ from modules.ratelimit.ratelimiter import limiter
 from modules.moderation.moderation_engine import check_input_safety
 
 # Statistics tracking
-from modules.statistics.stats import write_stats, read_stats, cleanup_expired_stats, monitor_pool
+from modules.statistics.stats import write_stats, read_stats, cleanup_expired_stats, monitor_pool, increment_visits_count, increment_unique_users_count, increment_shared_songs_count, increment_submited_moods_count
 from modules.statistics.tracking import get_stats
 
 
@@ -150,13 +150,29 @@ def check_temp_ban(func):
 @app.route('/', methods=['GET'])
 @limiter.limit("50 per minute")
 def index():
-    """
-    Serve html page
-    """
+    increment_visits_count()  # Always increment
+    if not session.get('counted_unique'):
+        increment_unique_users_count()  # Only once per session
+        session['counted_unique'] = True
     cache_buster = datetime.now().strftime("%Y%m%d%H%M%S")
     return render_template('index.htm', cache_buster=cache_buster)
 
 # API Endpoints
+
+@app.route('/stats', methods=['POST', 'GET'])
+@check_temp_ban
+@limiter.limit(os.getenv("MOOD_ENDPOINT_LIMIT", "10") + " per minute")
+async def get_stats_endpoint():
+    """
+    Enepoint to get the stats of the day
+    """
+
+    read_stats_data = read_stats()
+    if not read_stats_data:
+        return jsonify({"message": "No statistics available yet. Please check back later."}), 200
+    
+    logger.debug(f"Stats retrieved: {read_stats_data}")
+    return jsonify(read_stats_data), 200
 
 @app.route('/mood', methods=['POST'])
 @check_temp_ban
@@ -243,6 +259,7 @@ async def mood_endpoint():
 
     try:
         write_stats(dominant_mood)  # Write mood stats
+        increment_submited_moods_count()  # Increment submitted moods count
         
     except Exception as e:
         logger.error(f"Error writing stats: {e}")
@@ -317,6 +334,7 @@ def shared_page():
     """
     Serve the main page for shared songs
     """
+    increment_shared_songs_count()
     cache_buster = datetime.now().strftime("%Y%m%d%H%M%S")
     return render_template('index.htm', cache_buster=cache_buster)
 
