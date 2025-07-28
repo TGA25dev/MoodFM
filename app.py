@@ -73,7 +73,7 @@ CORS(app,
      resources={r"/*": {
          "origins": cors_origins,
          "methods": cors_methods,
-         "headers": cors_headers,
+         "allow_headers": cors_headers,
          "supports_credentials": cors_credentials
      }}
 )

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import time
 from contextlib import contextmanager
@@ -157,15 +157,36 @@ def increment_submited_moods_count():
 def write_stats(dominant_mood):
     timestamp = datetime.now()
     logger.debug(f"Writing stats: {dominant_mood} at {timestamp}")
+    mood_columns = ['angry', 'disgusted', 'scared', 'joy', 'sad', 'surprised']
+
+    # Normalize mood key
+    mood_map = {
+        "anger": "angry",
+        "angry": "angry",
+        "disgust": "disgusted",
+        "disgusted": "disgusted",
+        "fear": "scared",
+        "scared": "scared",
+        "joy": "joy",
+        "happy": "joy",
+        "sadness": "sad",
+        "sad": "sad",
+        "surprise": "surprised",
+        "surprised": "surprised"
+    }
+    normalized_mood = mood_map.get(dominant_mood.lower())
+    if normalized_mood not in mood_columns:
+        logger.warning(f"Unknown mood '{dominant_mood}' (normalized: '{normalized_mood}') - not updating stats")
+        return
     try:
         with get_db_connection() as connection:
             cursor = connection.cursor(dictionary=True)
             cursor.execute(
-                f"INSERT INTO {mood_stats_table} (mood, timestamp) VALUES (%s, %s)",
-                (dominant_mood, timestamp)
+                f"UPDATE {mood_stats_table} SET {normalized_mood} = {normalized_mood} + 1, last_updated = %s WHERE id = 1",
+                (timestamp,)
             )
             connection.commit()
-            logger.info(f"Stats written: {dominant_mood} at {timestamp}")
+            logger.info(f"Stats updated: {normalized_mood} at {timestamp}")
 
     except mysql.connector.Error as err:
         logger.error(f"Error writing stats: {err}")
@@ -175,33 +196,21 @@ def write_stats(dominant_mood):
             pass
 
 def read_stats():
+    mood_columns = ['angry', 'disgusted', 'scared', 'joy', 'sad', 'surprised']
     try:
         with get_db_connection() as connection:
             cursor = connection.cursor(dictionary=True)
-            # Get mood stats
+            # Get mood stats from the single row
             cursor.execute(
-                f"""
-                SELECT mood, COUNT(*) as mood_count
-                FROM {mood_stats_table}
-                GROUP BY mood
-                """
+                f"SELECT {', '.join(mood_columns)}, last_updated FROM {mood_stats_table} WHERE id = 1"
             )
-            results = cursor.fetchall()
-            if not results:
-                # No stats found
+            row = cursor.fetchone()
+            if not row:
                 return {
                     "message": "No statistics available yet. Please check back later."
                 }
-            stats = {}
-            for row in results:
-                stats[row["mood"]] = {
-                    "count": row["mood_count"]
-                }
-            # Get the latest timestamp overall
-            cursor.execute(
-                f"SELECT MAX(timestamp) as last_updated FROM {mood_stats_table}"
-            )
-            last_updated = cursor.fetchone()["last_updated"]
+            stats = {mood: {"count": row.get(mood, 0) or 0} for mood in mood_columns}
+            last_updated = row.get("last_updated")
 
             # Get visits and unique users counters
             cursor.execute(
@@ -228,23 +237,21 @@ def read_stats():
         return {"stats": {}, "last_updated": None, "visits_count": 0, "unique_users_count": 0}
 
 def cleanup_expired_stats():
+    mood_columns = ['angry', 'disgusted', 'scared', 'joy', 'sad', 'surprised']
     while True:
-        #logger.debug("Running expired stats cleanup task")
+        
         try:
             with get_db_connection() as connection:
                 cursor = connection.cursor()
-
-                # Delete records older than today
-                delete_query = f"""
-                    DELETE FROM {mood_stats_table}
-                    WHERE DATE(timestamp) != CURDATE()
+                # Reset all mood columns to 0 and update last_updated
+                reset_query = f"""
+                    UPDATE {mood_stats_table}
+                    SET {', '.join([f"{mood} = 0" for mood in mood_columns])}, last_updated = %s
+                    WHERE id = 1
                 """
-                cursor.execute(delete_query)
-                deleted_count = cursor.rowcount
-
-                if deleted_count > 0:
-                    connection.commit()
-                    logger.info(f"Cleaned up {deleted_count} expired stats records")
+                cursor.execute(reset_query, (datetime.now(),))
+                connection.commit()
+                logger.info("Mood stats reset to 0 for all moods")
 
         except mysql.connector.Error as err:
             logger.error(f"MySQL error in expired stats cleanup task: {err}")
@@ -253,8 +260,18 @@ def cleanup_expired_stats():
             logger.error(f"Unexpected error in expired stats cleanup task: {e}")
 
         finally:
-            cursor.close()
-            time.sleep(3600)  # every hour
+            try:
+                cursor.close()
+            except Exception:
+                pass
+
+        # Calculate seconds until next midnight
+        now = datetime.now()
+        next_midnight = (now.replace(hour=0, minute=0, second=0, microsecond=0)
+                         + timedelta(days=1))
+        seconds_until_midnight = (next_midnight - now).total_seconds()
+        logger.info(f"Sleeping {seconds_until_midnight:.0f} seconds until next cleanup at midnight")
+        time.sleep(seconds_until_midnight)
 
 def monitor_pool():
     last_used = 0
