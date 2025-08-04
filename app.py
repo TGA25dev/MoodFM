@@ -13,12 +13,12 @@ import bleach
 from datetime import datetime
 from functools import wraps
 import threading
+import requests
 
 #Tranlation
 from modules.translation.translator import translate_text, detect_languages
 
 # Mood engine
-from modules.mood.mood_engine import get_mood
 from modules.music.last_fm_data import get_top_track_for_mood
 
 # Music providers
@@ -29,7 +29,6 @@ from modules.music.apple_music_data import search_track_on_apple_music
 
 # Rate limiting and moderation
 from modules.ratelimit.ratelimiter import limiter
-from modules.moderation.moderation_engine import check_input_safety
 
 # Statistics tracking
 from modules.statistics.stats import write_stats, read_stats, cleanup_expired_stats, monitor_pool, increment_visits_count, increment_unique_users_count, increment_shared_songs_count, increment_submited_moods_count
@@ -225,7 +224,20 @@ async def mood_endpoint():
         
     
     # MODERATION CHECK
-    is_safe = check_input_safety(text)
+    response = requests.post(
+        os.getenv('MODERATION_API_URL'),
+        json={"input": text},
+        headers={"Content-Type": "application/json"},
+        timeout=15
+    )
+
+    if response.status_code != 200:
+        logger.error(f"Moderation service error: {response.status_code} - {response.text}")
+        return jsonify({"error": "Moderation service is temporarily unavailable. Please try again later."}), 503
+    
+    elif response.status_code == 200:
+        is_safe = response.json().get('is_safe', None)
+
     if not is_safe:
         logger.warning(f"Unsafe input detected: {text}")
         ip = request.remote_addr
@@ -243,14 +255,26 @@ async def mood_endpoint():
         else:
             return jsonify({"error": "Input text contains harmful content, please rephrase"}), 400
     
-    mood_analysis = get_mood(text)
-    if not mood_analysis or mood_analysis[0] is None:
+    #Get Mood
+    response = requests.get(
+        os.getenv('MOOD_API_URL'),
+        params={"input": text},
+        headers={"Content-Type": "application/json"},
+        timeout=15
+    )
+    logger.info(response.content)
+
+    if response.status_code != 200:
         return jsonify({
             "error": "Mood analysis service is temporarily unavailable. Please try again later.",
             "service_status": "degraded"
         }), 503  # Service Unavailable
     
-    dominant_mood, mood_score = mood_analysis
+    
+    elif response.status_code == 200 and response.json():
+        dominant_mood = response.json().get('dominant_mood', None)
+        mood_score = response.json().get('mood_score', None)
+
     logger.info(f"Mood analysis for text: {text} - Dominant Mood: {dominant_mood}, Score: {mood_score}")
 
     if dominant_mood is None or mood_score is None or dominant_mood == "neutral":
