@@ -117,6 +117,54 @@
         </div>
 
         <div class="sections-container">
+            <div id="stats-container" class="section">
+                <h2 data-i18n="stats.title">Stats</h2>
+                <p class="stats-context" data-i18n="stats.context">
+                    Here’s a quick look at how often each mood is picked. The higher the number, the more popular that mood is!
+                </p>
+                <div class="stats-time-selector" id="stats-time-selector">
+                    <button class="time-bubble active" data-period="today" data-i18n="stats.today">Today</button>
+                    <button class="time-bubble" data-period="month" data-i18n="stats.month">Month</button>
+                    <button class="time-bubble" data-period="ever" data-i18n="stats.ever">Ever</button>
+                </div>
+
+                <div id="stats-loading-text" class="stats-loading-text">
+                    <span>Loading stats...</span>
+                </div>
+                <div id="mood-chart" class="mood-chart">
+                    <div class="mood-bar" data-mood="Happy">
+                        <div class="bar"></div>
+                        <span class="bar-value"></span>
+                        <span class="bar-label">Happy</span>
+                    </div>
+                    <div class="mood-bar" data-mood="Sad">
+                        <div class="bar"></div>
+                        <span class="bar-value"></span>
+                        <span class="bar-label">Sad</span>
+                    </div>
+                    <div class="mood-bar" data-mood="Surprised">
+                        <div class="bar"></div>
+                        <span class="bar-value"></span>
+                        <span class="bar-label">Surprised</span>
+                    </div>
+                    <div class="mood-bar" data-mood="Scared">
+                        <div class="bar"></div>
+                        <span class="bar-value"></span>
+                        <span class="bar-label">Scared</span>
+                    </div>
+                    <div class="mood-bar" data-mood="Angry">
+                        <div class="bar"></div>
+                        <span class="bar-value"></span>
+                        <span class="bar-label">Angry</span>
+                    </div>
+                    <div class="mood-bar" data-mood="Disgusted">
+                        <div class="bar"></div>
+                        <span class="bar-value"></span>
+                        <span class="bar-label">Disgusted</span>
+                    </div>
+                </div>
+            </div>
+            
             <div id="about" class="section">
                 <h2 data-i18n="about.title">About MoodFM</h2>
                 <p data-i18n="about.content">

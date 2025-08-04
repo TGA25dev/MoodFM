@@ -161,13 +161,19 @@ def index():
 
 @app.route('/stats', methods=['POST', 'GET'])
 @check_temp_ban
-@limiter.limit(os.getenv("MOOD_ENDPOINT_LIMIT", "10") + " per minute")
+@limiter.limit(os.getenv("STATS_ENDPOINT_LIMIT", "10") + " per minute")
 async def get_stats_endpoint():
     """
-    Enepoint to get the stats of the day
+    Enepoint to get the stats of a specific period
     """
 
-    read_stats_data = read_stats()
+    period = request.args.get('period').lower()
+    valid_periods = ['month', 'today', 'ever']
+
+    if period not in valid_periods:
+        return jsonify({"error": f"Invalid period. Valid options are: {', '.join(valid_periods)}"}), 400
+
+    read_stats_data = read_stats(period)
     if not read_stats_data:
         return jsonify({"message": "No statistics available yet. Please check back later."}), 200
     
@@ -477,11 +483,15 @@ def test_endpoint():
     return jsonify({"message": "Pong !"}), 200
 
 def start_background_tasks():
-    expired_stats_cleanup_thread = threading.Thread(target=cleanup_expired_stats, daemon=True)
+    daily_cleanup_thread = threading.Thread(target=cleanup_expired_stats, args=("today",), daemon=True)  
+    monthly_cleanup_thread = threading.Thread(target=cleanup_expired_stats, args=("month",), daemon=True)
     pool_monitor_thread = threading.Thread(target=monitor_pool, daemon=True)
     
-    expired_stats_cleanup_thread.start()
+    daily_cleanup_thread.start()
+    monthly_cleanup_thread.start()
     pool_monitor_thread.start()
+    
+    logger.info("Background tasks started successfully !")
 
 
 if __name__ == '__main__':    

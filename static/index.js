@@ -786,6 +786,220 @@ document.addEventListener('DOMContentLoaded', () => {
         
         lastScrollPosition = currentScrollPosition;
     });
+
+    //Stats data management
+    let statsData = {
+        today: null,
+        month: null,
+        ever: null
+    };
+    let currentPeriod = 'today';
+    let statsContainerRevealed = false;
+    const moodChart = document.getElementById('mood-chart');
+    const statsLoadingText = document.getElementById('stats-loading-text');
+    
+    //Hide chart and show loader by default
+    if (moodChart) moodChart.style.display = 'none';
+    if (statsLoadingText) statsLoadingText.style.display = 'block';
+    
+    // Fetch stats for a specific period
+    async function fetchStatsForPeriod(period) {
+        try {
+            const response = await fetch(`/stats?period=${period}`);
+            if (!response.ok) throw new Error('Failed to fetch stats');
+            const data = await response.json();
+            return data.stats || {};
+        } catch (error) {
+            console.error(`Error fetching ${period} stats:`, error);
+            return null;
+        }
+    }
+    
+    async function loadAllStats() {
+        const periods = ['today', 'month', 'ever'];
+        const promises = periods.map(period => fetchStatsForPeriod(period));
+        
+        try {
+            const results = await Promise.all(promises);
+            periods.forEach((period, index) => {
+                statsData[period] = results[index];
+            });
+            
+            if (statsContainerRevealed) {
+                if (moodChart) moodChart.style.display = 'flex';
+                if (statsData[currentPeriod]) {
+                    animateMoodBars(statsData[currentPeriod]);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            if (statsLoadingText) {
+                getCurrentTranslations().then(translations => {
+                    const errorText = getNestedTranslation(translations, 'stats.loadError') || 'Failed to load stats.';
+                    statsLoadingText.textContent = errorText;
+                    setTimeout(() => {
+                        statsLoadingText.classList.add('out');
+                        setTimeout(() => {
+                            statsLoadingText.style.display = 'none';
+                            statsLoadingText.classList.remove('out');
+                        }, 500);
+                    }, 1500);
+                });
+            }
+        }
+    }
+    
+    function switchStatsPeriod(period) {
+        if (period === currentPeriod) return;
+        
+        currentPeriod = period;
+        
+        document.querySelectorAll('.time-bubble').forEach(bubble => {
+            bubble.classList.remove('active');
+            if (bubble.dataset.period === period) {
+                bubble.classList.add('active');
+            }
+        });
+            
+        // Show loading state
+        const activeBubble = document.querySelector(`.time-bubble[data-period="${period}"]`);
+        if (activeBubble) {
+            activeBubble.classList.add('loading');
+        }
+            
+        if (statsData[period]) {
+            setTimeout(() => {
+                animateMoodBars(statsData[period]);
+                if (activeBubble) {
+                    activeBubble.classList.remove('loading');
+                }
+            }, 300);
+        } else {
+            // Fetch data for this period
+            fetchStatsForPeriod(period).then(data => {
+                statsData[period] = data;
+                if (data && statsContainerRevealed) {
+                    animateMoodBars(data);
+                }
+                if (activeBubble) {
+                    activeBubble.classList.remove('loading');
+                }
+            });
+        }
+    }
+    
+function animateMoodBars(stats) {
+    if (statsLoadingText && statsLoadingText.style.display !== 'none') {
+        setTimeout(() => {
+            statsLoadingText.classList.add('out');
+            setTimeout(() => {
+                statsLoadingText.style.display = 'none';
+                statsLoadingText.classList.remove('out');
+            }, 500);
+        }, 200);
+    }
+    
+    if (!stats || Object.keys(stats).length === 0) {
+        //If no stats, show empty bars with zero values
+        document.querySelectorAll('.mood-bar').forEach((bar) => {
+            const barEl = bar.querySelector('.bar');
+            const valueEl = bar.querySelector('.bar-value');
+            
+            if (barEl && valueEl) {
+                barEl.style.height = "8px"; // Minimum height
+                valueEl.textContent = "0";
+                bar.removeAttribute('data-percentage');
+            }
+        });
+        
+        // Show the chart even with empty data
+        if (moodChart) moodChart.style.display = 'flex';
+        return;
+    }
+    
+    const moodOrder = [
+        { key: "joy", name: "Happy" },
+        { key: "sad", name: "Sad" },
+        { key: "surprised", name: "Surprised" },
+        { key: "scared", name: "Scared" },
+        { key: "angry", name: "Angry" },
+        { key: "disgusted", name: "Disgusted" }
+    ];
+    
+    const moodValues = moodOrder.map(m => stats[m.key]?.count || 0);
+    const max = Math.max(...moodValues, 1);
+    const totalEntries = moodValues.reduce((sum, val) => sum + val, 0);
+    
+    const minBarHeight = 30;
+    const maxBarHeight = 180;
+    const baseHeight = 8;
+    
+    //Animate bars
+    document.querySelectorAll('.mood-bar').forEach((bar, i) => {
+        const val = moodValues[i];
+        const barEl = bar.querySelector('.bar');
+        const valueEl = bar.querySelector('.bar-value');
+        
+        if (!barEl || !valueEl) return;  // Safety check 
+        
+        //Calculate percentage for data attribute
+        const percentage = totalEntries > 0 ? Math.round((val / totalEntries) * 100) : 0;
+        bar.setAttribute('data-percentage', percentage + '%');
+        
+        // Collapse animation
+        barEl.style.height = baseHeight + "px";
+        valueEl.textContent = "0";
+        
+        //expand animation
+        setTimeout(() => {
+            let barHeight;
+            
+            if (val === 0) {
+                barHeight = baseHeight; //minimum height for zero values
+            } else if (val === max) {
+                barHeight = maxBarHeight; // maximum height for the largest value
+            } else {
+                //use square root scaling, better for small values
+                const scaleFactor = Math.sqrt(val / max);
+                barHeight = baseHeight + scaleFactor * (maxBarHeight - baseHeight);
+                
+                barHeight = Math.max(barHeight, minBarHeight);
+            }
+            
+            barEl.style.height = barHeight + "px";
+            
+            // Animate number counting
+            animateValue(valueEl, 0, val, 600);
+        }, 100 + i * 120);
+    });
+    
+    // Show the chart
+    if (moodChart) moodChart.style.display = 'flex';
+}
+    // Function to animate number counting
+    function animateValue(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const current = Math.floor(progress * (end - start) + start);
+            element.textContent = current;
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+    
+    // Stats period switching event listeners
+    document.querySelectorAll('.time-bubble').forEach(bubble => {
+        bubble.addEventListener('click', function() {
+            const period = this.dataset.period;
+            if (period) {
+                switchStatsPeriod(period);
+            }
+        });
+    });
     
     // Initialize ScrollReveal for sections
     const sr = ScrollReveal({
@@ -813,6 +1027,31 @@ document.addEventListener('DOMContentLoaded', () => {
     sr.reveal('#go-up-link', { 
         delay: 600,
         origin: 'bottom'
+    });
+
+    sr.reveal('#stats-container', {
+        delay: 500,
+        origin: 'bottom',
+        afterReveal: function() {
+            statsContainerRevealed = true;
+            if (moodChart) moodChart.style.display = 'flex';
+            
+            if (statsData[currentPeriod]) {
+                animateMoodBars(statsData[currentPeriod]);
+            } else {
+                animateMoodBars(null);
+                
+                // Check if we need to fetch data
+                if (statsData[currentPeriod] === null) {
+                    fetchStatsForPeriod(currentPeriod).then(data => {
+                        statsData[currentPeriod] = data;
+                        if (data) {
+                            animateMoodBars(data);
+                        }
+                    });
+                }
+            }
+        }
     });
     
     // Mobile menu functionality
