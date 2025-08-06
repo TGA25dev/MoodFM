@@ -252,26 +252,66 @@ def cleanup_expired_stats(period):
         logger.error(f"Invalid period for cleanup: {period}. Only 'today' and 'month' are supported.")
         return
     
+    perform_cleanup_if_needed(period, mood_columns)
+    
     while True:
-        now = datetime.now()
-        
-        if period == 'today':
-            # Calculate seconds until next midnight
-            next_reset = (now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1))
-            reset_type = "daily"
-            
-        elif period == 'month':
-            # Calculate next first day of month
-            if now.month == 12:
-                next_reset = now.replace(year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
-            else:
-                next_reset = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0)
-            reset_type = "monthly"
-        
-        seconds_until_reset = (next_reset - now).total_seconds()
-        logger.info(f"Sleeping {seconds_until_reset:.0f} seconds until next {reset_type} cleanup for {period} stats")
-        time.sleep(seconds_until_reset)
+        try:
+            time.sleep(300)  # 5 minutes
+            perform_cleanup_if_needed(period, mood_columns)
+        except Exception as e:
+            logger.error(f"Error in cleanup loop for {period}: {e}")
 
+def perform_cleanup_if_needed(period, mood_columns):
+    """
+    Check if cleanup is needed and perform it if so
+    """
+    now = datetime.now()
+    
+    if period == 'today':
+        #Check if we're in a new day compared to last update
+        reset_needed = False
+        try:
+            with get_db_connection() as connection:
+                cursor = connection.cursor(dictionary=True)
+                cursor.execute(f"SELECT last_updated FROM {mood_stats_table}_{period} WHERE id = 1")
+                result = cursor.fetchone()
+                
+                if result and result['last_updated']:
+                    last_updated = result['last_updated']
+                    if last_updated.date() < now.date():
+
+                        reset_needed = True
+                        logger.info(f"Daily reset needed: last update was {last_updated}, now is {now}")
+                else:
+                    reset_needed = True
+        except Exception as e:
+            logger.error(f"Error checking last update time for {period}: {e}")
+            return
+            
+    elif period == 'month':
+        # Check if we're in a new month compared to last update
+        reset_needed = False
+        try:
+            with get_db_connection() as connection:
+                cursor = connection.cursor(dictionary=True)
+                cursor.execute(f"SELECT last_updated FROM {mood_stats_table}_{period} WHERE id = 1")
+                result = cursor.fetchone()
+
+                if result and result['last_updated']:
+
+                    last_updated = result['last_updated']
+                    if (last_updated.year < now.year) or (last_updated.year == now.year and last_updated.month < now.month):
+                        reset_needed = True
+
+                        logger.info(f"Monthly reset needed: last update was {last_updated}, now is {now}")
+                else:
+                    reset_needed = True
+        except Exception as e:
+            logger.error(f"Error checking last update time for {period}: {e}")
+            return
+    
+    # Perform the reset if needed
+    if reset_needed:
         try:
             with get_db_connection() as connection:
                 cursor = connection.cursor()
@@ -281,21 +321,14 @@ def cleanup_expired_stats(period):
                     SET {', '.join([f"{mood} = 0" for mood in mood_columns])}, last_updated = %s
                     WHERE id = 1
                 """
-                cursor.execute(reset_query, (datetime.now(),))
+                cursor.execute(reset_query, (now,))
                 connection.commit()
-                logger.info(f"{reset_type.capitalize()} mood stats reset to 0 for all moods in {period} table")
-
+                reset_type = "daily" if period == "today" else "monthly"
+                logger.info(f"{reset_type.capitalize()} mood stats reset completed for {period} table at {now}")
         except mysql.connector.Error as err:
-            logger.error(f"MySQL error in {period} stats cleanup task: {err}")
-
+            logger.error(f"MySQL error during {period} stats reset: {err}")
         except Exception as e:
-            logger.error(f"Unexpected error in {period} stats cleanup task: {e}")
-
-        finally:
-            try:
-                cursor.close()
-            except Exception:
-                pass
+            logger.error(f"Unexpected error during {period} stats reset: {e}")
 
 def monitor_pool():
     last_used = 0

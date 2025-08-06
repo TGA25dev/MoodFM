@@ -31,18 +31,43 @@
         "loadingText": "Analyse de vos émotions en cours..."
     },
 
+    "stats": {
+        "title": "Stats",
+        "context": "Decouvrez comment les gens se sont sentis recemment. Chaque nombre indique combien de fois un utilisateur a exprimé ce sentiment. Plus le nombre est élevé, plus ce mood est populaire !",
+        "loader": "Chargement des données...",
+        "today": "Aujourd'hui",
+        "month": "Ce mois-ci",
+        "allTime": "Depuis toujours"
+    },
+
+    "statsLabels": {
+        "happy": "Heureux",
+        "sad": "Tristes",
+        "surprised": "Étonnés",
+        "scared": "Éffrayés",
+        "angry": "Énervés ",
+        "disgusted": "Dégoutés"
+    },
+
     "about": {
         "title": "À propos de MoodFM",
-        "content": "MoodFM est un application musicale propulsée par l’IA qui transforme vos émotions en recommendation musicale. Il suffit de taper comment vous vous sentez (dans n’importe quelle langue), MoodFM analyse votre humeur grâce au traitement du langage naturel et trouve un morceau qui correspond à votre état émotionnel.<br><br>Ce projet a été réalisé en moins de deux semaines pour le <a target=\"_blank\" href=\"https://summer.hackclub.com\">Summer of Making</a> 2025, entièrement auto-hébergé. MoodFM respecte votre vie privée — pas de compte, pas de suivi, juste de la musique et votre mood."
+        "content": "MoodFM est un application musicale propulsée par l’IA qui transforme vos émotions en recommendation musicale. Il suffit de taper comment vous vous sentez (dans n’importe quelle langue), MoodFM analyse ensuite votre humeur et trouve un morceau qui correspond à votre état émotionnel.<br><br>Ce projet a été réalisé en moins de quatres semaines pour le <a target=\"_blank\" href=\"https://summer.hackclub.com\">Summer of Making</a> 2025, entièrement auto-hébergé.  Pas de compte, pas de pubs, juste de la musique et des vibes. ✨"
     },
     
     "howItWorks": {
         "title": "Comment ça marche",
-        "content": "Tapez comment vous vous sentez et MoodFM traduit votre texte grâce à l’API Google Translate, l’analyse avec l’IA (modèles Huggingface), l’associe à des tags musicaux présélectionnés, récupère des morceaux sur Last.fm et les principales plateformes de streaming, et vous permet de partager votre chanson avec un lien unique — le tout propulsé par un backend Flask respectueux de la vie privée et un frontend JS Vanilla."
+        "content": "Après avoir rentré votre texte MoodFM le traduit en Anglais grâce à l’API Google Translate, pour que les modèles d'IA puissent le comprendre. Ensuite il est analysé avec l’IA (via des modèles Huggingface) pour s'assurer qu'il est safe puis pour identifier l'émotion majoritaire du texte.<br><br>Basé sur cette analyse, une chanson est séléctionnée grâce à de tags sur Last.fm et ensuite récupérée sur les principales plateformes de streaming grâce à differenttes APIs.<br><br>Pour finir vous pouvez partager votre chanson avec un lien unique pour laisser la vibe continuer. 🎶"
     },
 
     "footer": {
-        "goUpLink": "Remonter ↑"
+        "goUpLink": "Remonter ↑",
+        "description": "Merci dêtre venu ! Si le projet vous a plu n'hésitez pas aller voir mes autres projets sur GitHub ou alors juste jeter un coup d'œil au code source en utilisant les liens ci-dessous. 😁",
+        "bentoLink": "À propos de moi",
+        "sourceCodeLink": "Code Source",
+        "projectLicenseLink": "Licence du projet",
+        "summerOfMakingLink": "Summer of Making",
+        "creditsTitle": "Fait avec ❤️ par TGA25dev",
+        "creditsSubtitle": "Août 2025"
     },
 
     "feelings": {

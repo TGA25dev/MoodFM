@@ -247,7 +247,7 @@ async def mood_endpoint():
         if count == 1:
             # Set expiry for the first offense
             redis_connection.expire(key, 3600)
-        if count >= 3:
+        if count >= 2:
             # Ban IP for 10 minutes
             redis_connection.setex(f"banned:{ip}", 600, "1")
             redis_connection.delete(key)  # Reset counter after ban

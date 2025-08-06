@@ -31,18 +31,43 @@
     "loadingText": "Analysing your feelings..."
   },
 
-  "about": {
-    "title": "About MoodFM",
-    "content": "MoodFM is an AI-powered music recommender that transforms your emotions into the perfect song. Just type how you feel (in any language), and MoodFM analyzes your mood using natural language processing and finds a song that matches your emotional state.<br><br>It was built in under two weeks for the <a target=\"_blank\" href=\"https://summer.hackclub.com\">Summer of Making </a> 2025, entirely self-hosted at home. MoodFM is stateless, privacy-respecting — no login, no tracking, just music and emotion."
+  "stats": {
+    "title": "Stats",
+    "context": "See how's everyone been feeling lately, mood by mood. Each number shows how many times a user felt this way. The higher the number, the more popular that mood is!",
+    "loader": "Loading stats...",
+    "today": "Today",
+    "month": "This Month",
+    "allTime": "All Time"
   },
 
-  "how-it-works": {
+  "statsLabels": {
+    "happy": "Happy",
+    "sad": "Sad",
+    "surprised": "Surprised",
+    "scared": "Scared",
+    "angry": "Angry",
+    "disgusted": "Disgusted"
+  },
+
+  "about": {
+    "title": "About MoodFM",
+    "content": "MoodFM is an AI-powered music recommender that transforms your emotions into the perfect song. Just type how you feel (in any language), then MoodFM analyzes your mood and finds a song that matches your emotional state.<br><br>It was built in under four weeks for the <a target=\"_blank\" href=\"https://summer.hackclub.com\">Summer of Making </a> 2025, entirely self-hosted at home. MoodFM is stateless : no login, no ads, just music and emotion. ✨"
+  },
+
+  "howItWorks": {
     "title": "How it Works",
-    "content": "Enter how you feel and MoodFM translates your mood using Google Translate API, analyzes it with AI (Huggingface models), matches it to curated music tags, fetches tracks from Last.fm and major platforms, and lets you share your personalized song with a unique link—all powered by a privacy-friendly Flask backend and a Vanila JS frontend."
+    "content": "After you enter your mood, the text is translated to English using the Google Translate API, so the models can understand it. It’s then analyzed with AI (via HuggingFace models) to ensure it's safe and to identify the emotional tone.<br><br>Based on that mood, a matching song is selected using Last.fm tags and then fetched from various music providers through different APIs.<br><br>Finally, you can share your personalized track with a unique link letting the vibe live on. 🎶"
   },
 
   "footer": {
-    "goUpLink": "Go up ↑"
+    "goUpLink": "Go up ↑",
+    "description": "Thanks for coming! If you enjoyed the experience you might want to discover my other projects on GitHub or just take a look to the code by using the links below. 😁",
+    "bentoLink": "About Me",
+    "sourceCodeLink": "Source Code",
+    "projectLicenseLink": "Project License",
+    "summerOfMakingLink": "Summer of Making",
+    "creditsTitle": "Made with ❤️ by TGA25dev",
+    "creditsSubtitle": "August 2025"
   },
 
   "feelings": {

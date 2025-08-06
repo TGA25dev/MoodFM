@@ -61,7 +61,7 @@
                 <button data-i18n="submit.button" class="submit-mood-button" id="submit_mood_button">Turn your mood into music </button>
                 <input data-i18n="submit.inputBox" class="mood-input-box" id="mood_input_box" type="text" placeholder="How are you feeling today?">
             </div>
-            <p data-i18n="scrollInstructions" class="scroll-instructions">Don't forget to scroll down !</p>
+            <p data-i18n="scrollInstructions" class="scroll-instructions">Don't forget to scroll down!</p>
         </div>
 
         <div class="results-overlay" id="results-overlay"></div>
@@ -120,47 +120,47 @@
             <div id="stats-container" class="section">
                 <h2 data-i18n="stats.title">Stats</h2>
                 <p class="stats-context" data-i18n="stats.context">
-                    Here’s a quick look at how often each mood is picked. The higher the number, the more popular that mood is!
+                    See how's eveyone been feeling lately, mood by mood. Each number shows how many times a user felt this way. The higher the number, the more popular that mood is!
                 </p>
                 <div class="stats-time-selector" id="stats-time-selector">
                     <button class="time-bubble active" data-period="today" data-i18n="stats.today">Today</button>
-                    <button class="time-bubble" data-period="month" data-i18n="stats.month">Month</button>
-                    <button class="time-bubble" data-period="ever" data-i18n="stats.ever">Ever</button>
+                    <button class="time-bubble" data-period="month" data-i18n="stats.month">This Month</button>
+                    <button class="time-bubble" data-period="ever" data-i18n="stats.allTime">All Time</button>
                 </div>
 
                 <div id="stats-loading-text" class="stats-loading-text">
-                    <span>Loading stats...</span>
+                    <span data-i18n="stats.loader">Loading stats...</span>
                 </div>
                 <div id="mood-chart" class="mood-chart">
                     <div class="mood-bar" data-mood="Happy">
                         <div class="bar"></div>
                         <span class="bar-value"></span>
-                        <span class="bar-label">Happy</span>
+                        <span class="bar-label" data-i18n="statsLabels.happy">Happy</span>
                     </div>
                     <div class="mood-bar" data-mood="Sad">
                         <div class="bar"></div>
                         <span class="bar-value"></span>
-                        <span class="bar-label">Sad</span>
+                        <span class="bar-label" data-i18n="statsLabels.sad">Sad</span>
                     </div>
                     <div class="mood-bar" data-mood="Surprised">
                         <div class="bar"></div>
                         <span class="bar-value"></span>
-                        <span class="bar-label">Surprised</span>
+                        <span class="bar-label" data-i18n="statsLabels.surprised">Surprised</span>
                     </div>
                     <div class="mood-bar" data-mood="Scared">
                         <div class="bar"></div>
                         <span class="bar-value"></span>
-                        <span class="bar-label">Scared</span>
+                        <span class="bar-label" data-i18n="statsLabels.scared">Scared</span>
                     </div>
                     <div class="mood-bar" data-mood="Angry">
                         <div class="bar"></div>
                         <span class="bar-value"></span>
-                        <span class="bar-label">Angry</span>
+                        <span class="bar-label" data-i18n="statsLabels.angry">Angry</span>
                     </div>
                     <div class="mood-bar" data-mood="Disgusted">
                         <div class="bar"></div>
                         <span class="bar-value"></span>
-                        <span class="bar-label">Disgusted</span>
+                        <span class="bar-label" data-i18n="statsLabels.disgusted">Disgusted</span>
                     </div>
                 </div>
             </div>
@@ -168,20 +168,49 @@
             <div id="about" class="section">
                 <h2 data-i18n="about.title">About MoodFM</h2>
                 <p data-i18n="about.content">
-                    MoodFM is an AI-powered music recommender that transforms your emotions into the perfect song. Just type how you feel (in any language), and MoodFM analyzes your mood using natural language processing and finds a song that matches your emotional state.<br><br>
-                    It was built in under two weeks for the <a target="_blank" href="https://summer.hackclub.com">Summer of Making </a> 2025, entirely self-hosted at home. MoodFM is stateless, privacy-respecting — no login, no tracking, just music and emotion.
+                    MoodFM is an AI-powered music recommender that transforms your emotions into the perfect song. Just type how you feel (in any language) then MoodFM analyzes your mood and finds a song that matches your emotional state.<br><br>
+                    It was built in under four weeks for the <a target="_blank\" href="https://summer.hackclub.com">Summer of Making </a> 2025, entirely self-hosted at home. MoodFM is stateless : no login, no ads, just music and emotion. ✨
                 </p>
             </div>
 
             <div id="how-it-works" class="section">
                 <h2 data-i18n="howItWorks.title">How it Works</h2>
                 <p data-i18n="howItWorks.content">
-                Enter how you feel and MoodFM translates your mood using Google Translate API, analyzes it with AI (Huggingface models), matches it to curated music tags, fetches tracks from Last.fm and major platforms, and lets you share your personalized song with a unique link—all powered by a privacy-friendly Flask backend and a Vanila JS frontend.
+                After you enter your mood, the text is translated to English using the Google Translate API, so the models can understand it. It’s then analyzed with AI (via HuggingFace models) to ensure it's safe and to identify the emotional tone.<br><br>Based on that mood, a matching song is selected using Last.fm tags and then fetched from various music providers through different APIs.<br><br>Finally, you can share your personalized track with a unique link letting the vibe live on. 🎶
                 </p>
             </div>
         </div>
 
         <a data-i18n="footer.goUpLink" href="#top" class="go-up-link" id="go-up-link">Go up ↑</a>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <p class="footer-description" data-i18n="footer.description">Thanks for coming! If you enjoyed the experience you might want to discover my other projects on GitHub or just take a look to the code by using the links below. 😁</p>
+                <div class="footer-links">
+
+                    <a href="https://bento.me/tga25" target="_blank" class="footer-link" data-i18n="footer.bentoLink">
+                        About Me
+                    </a>
+
+                    <a href="https://github.com/TGA25dev/MoodFM/" target="_blank" class="footer-link" data-i18n="footer.sourceCodeLink">
+                        Source Code
+                    </a>
+
+                    <a href="https://github.com/TGA25dev/MoodFM/blob/main/LICENSE" target="_blank" class="footer-link" data-i18n="footer.projectLicenseLink">
+                        Project License
+                    </a>
+
+                    <a href="https://summer.hackclub.com" target="_blank" class="footer-link" data-i18n="footer.summerOfMakingLink">
+                        Summer of Making
+                    </a>
+
+                </div>
+                <div class="footer-credits">
+                    <p class="footer-credits-title" data-i18n="footer.creditsTitle">Made with ❤️ by TGA25dev</p>
+                    <p class="footer-credits-subtitle" data-i18n="footer.creditsSubtitle">August 2025</p>
+                </div>
+            </div>
+        </footer>
     </body>
     <script src="{{ url_for('static', filename='index.js') }}?{{ cache_buster }}"></script>
     <script src="{{ url_for('static', filename='lang-switcher.js') }}?{{ cache_buster }}"></script>
