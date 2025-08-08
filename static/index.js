@@ -708,12 +708,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.getElementById('close-button').addEventListener('click', function() {
+    // Function to close the results popup
+    function closeResultsPopup() {
         const resultsContainer = document.getElementById('results-container');
         const resultsOverlay = document.getElementById('results-overlay');
 
         if (window.location.pathname === '/shared') {
-        window.history.replaceState({}, '', '/');
+            window.history.replaceState({}, '', '/');
         }
 
         if (resultsContainer) resultsContainer.classList.remove('shared-mode');
@@ -735,34 +736,23 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remove the show class to hide the popup
         resultsContainer.classList.remove('show');
         resultsOverlay.classList.remove('show');
-         document.body.classList.remove('popup-open');
-    });
+        document.body.classList.remove('popup-open');
+    }
 
-    document.getElementById('results-overlay').addEventListener('click', function() {
-        if (resultsContainer) resultsContainer.classList.remove('shared-mode');
-        const resultsContainer = document.getElementById('results-container');
-        const resultsOverlay = document.getElementById('results-overlay');
+    //Close button click
+    document.getElementById('close-button').addEventListener('click', closeResultsPopup);
 
-        // Reset URL if on shared page
-        if (window.location.pathname === '/shared') {
-            window.history.replaceState({}, '', '/');
-        }
-        
-        const audioPreview = document.getElementById('audio-preview');
-        if (audioPreview) {
-            audioPreview.pause();
-            audioPreview.currentTime = 0;
-            audioPreview.src = '';
-
-            const playButton = document.querySelector('.track-play-button');
-            if (playButton) {
-                playButton.innerHTML = '<i class="fas fa-play"></i>';
+    //Overlay click
+    document.getElementById('results-overlay').addEventListener('click', closeResultsPopup);
+    
+    // ESC key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' || event.key === 'Esc' || event.keyCode === 27) {
+            const resultsContainer = document.getElementById('results-container');
+            if (resultsContainer && resultsContainer.classList.contains('show')) {
+                closeResultsPopup();
             }
         }
-        
-        resultsContainer.classList.remove('show');
-        resultsOverlay.classList.remove('show');
-         document.body.classList.remove('popup-open');
     });
 
     // Hide search box on scroll
