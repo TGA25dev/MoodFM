@@ -107,14 +107,14 @@ body::after {
 
 .header-title {
   font-family: "ClashDisplay", sans-serif;
-  font-size: 3.5rem;
+  font-size: 4rem;
   margin: 0;
   font-variation-settings: "wght" 600;
 }
 
 .header-subtitle {
   margin: 5px 0 0 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   opacity: 0.8;
   font-variation-settings: "wght" 450;
 }

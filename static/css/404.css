@@ -64,6 +64,8 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 90vw;
+  background: none;
+  text-shadow: none;
 }
 
 html[lang="fr"] .header-subtitle {
