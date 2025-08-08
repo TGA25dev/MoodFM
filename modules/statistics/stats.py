@@ -41,53 +41,56 @@ def get_db_connection():
     max_retries = 3
     retry_count = 0
     
-    while retry_count < max_retries:
-        try:
-            connection = connection_pool.get_connection()
-            
-            # Test if connection is valid
-            cursor = connection.cursor()
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-            cursor.close()
-            
-            yield connection
-            break  # If successful, exit the retry loop
-            
-        except mysql.connector.errors.PoolError as err:
-            # No available connections in pool
-            retry_count += 1
-            logger.warning(f"Pool error on attempt {retry_count}: {err}")
-            
-            if retry_count >= max_retries:
-                logger.error("Connection pool exhausted after retries")
-                raise
+    try:
+        while retry_count < max_retries:
+            try:
+                connection = connection_pool.get_connection()
                 
-            # Wait before retrying
-            time.sleep(0.5 * (2 ** retry_count))
-            
-        except mysql.connector.errors.InterfaceError as err:
-            # Connection interface error
-            retry_count += 1
-            logger.warning(f"Connection interface error on attempt {retry_count}: {err}")
-            
-            if retry_count >= max_retries:
-                logger.error("Failed to establish working connection after retries")
-                raise
+                # Test if connection is valid
+                cursor = connection.cursor()
+                cursor.execute("SELECT 1")
+                cursor.fetchone()
+                cursor.close()
+
+                logger.debug("Successfully obtained a valid connection from the pool !")
+                break
                 
-            time.sleep(0.5 * (2 ** retry_count))
+            except mysql.connector.errors.PoolError as err:
+                # No available connections in pool
+                retry_count += 1
+                logger.warning(f"Pool error on attempt {retry_count}: {err}")
+                
+                if retry_count >= max_retries:
+                    logger.error("Connection pool exhausted after retries")
+                    raise
+                    
+                time.sleep(0.5 * (2 ** retry_count))
+                
+            except mysql.connector.errors.InterfaceError as err:
+                #Connection interface error
+                retry_count += 1
+                logger.warning(f"Connection interface error on attempt {retry_count}: {err}")
+                
+                if retry_count >= max_retries:
+                    logger.error("Failed to establish working connection after retries")
+                    raise
+                    
+                time.sleep(0.5 * (2 ** retry_count))
+        
+        #Yield the connection
+        yield connection
             
-        except mysql.connector.Error as err:
-            # Other MySQL errors
-            logger.error(f"Database error: {err}")
-            raise
-            
-        finally:
-            if connection:
-                try:
-                    connection.close()
-                except Exception as e:
-                    logger.error(f"Error closing connection: {e}")
+    except mysql.connector.Error as err:
+        # Other MySQL errors
+        logger.error(f"Database error: {err}")
+        raise
+        
+    finally:
+        if connection:
+            try:
+                connection.close()
+            except Exception as e:
+                logger.error(f"Error closing connection: {e}")
 
 
 def increment_visits_count():
