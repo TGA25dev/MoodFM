@@ -252,14 +252,51 @@ def cleanup_expired_stats(period):
         logger.error(f"Invalid period for cleanup: {period}. Only 'today' and 'month' are supported.")
         return
     
+    current_date = datetime.now().date()
+    current_month = (datetime.now().year, datetime.now().month)
+    
     perform_cleanup_if_needed(period, mood_columns)
     
     while True:
         try:
-            time.sleep(300)  # 5 minutes
+            time.sleep(60)
+            
+            now = datetime.now()
+            
+            #Check if the date has changed
+            if period == 'today' and now.date() != current_date:
+                logger.info(f"Date changed from {current_date} to {now.date()} -> forcing daily reset")
+                reset_stats(period, mood_columns)
+                current_date = now.date()
+            
+            #Same but with the month
+            elif period == 'month' and (now.year, now.month) != current_month:
+                logger.info(f"Month changed from {current_month} to {(now.year, now.month)} -> forcing monthly reset")
+                reset_stats(period, mood_columns)
+                current_month = (now.year, now.month)
+
             perform_cleanup_if_needed(period, mood_columns)
+            
         except Exception as e:
             logger.error(f"Error in cleanup loop for {period}: {e}")
+
+def reset_stats(period, mood_columns):
+    """Explicitly reset stats for the given period"""
+    now = datetime.now()
+    try:
+        with get_db_connection() as connection:
+            cursor = connection.cursor()
+            reset_query = f"""
+                UPDATE {mood_stats_table}_{period}
+                SET {', '.join([f"{mood} = 0" for mood in mood_columns])}, last_updated = %s
+                WHERE id = 1
+            """
+            cursor.execute(reset_query, (now,))
+            connection.commit()
+            reset_type = "daily" if period == "today" else "monthly"
+            logger.info(f"{reset_type.capitalize()} mood stats reset completed for {period} table at {now}")
+    except Exception as e:
+        logger.error(f"Error during forced {period} stats reset: {e}")
 
 def perform_cleanup_if_needed(period, mood_columns):
     """
